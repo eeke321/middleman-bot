@@ -12,6 +12,8 @@ Basic Echobot example, repeats messages.
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
+
+
 # MORJES TÄSSÄ MUN MUUTOS
 import logging
 
@@ -22,6 +24,13 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
+
+import os
+print(os.getcwd())
+
+import openpyxl
+
+wb = openpyxl.load_workbook('file.xlsx')
 
 
 # Define a few command handlers. These usually take the two arguments update and
@@ -42,6 +51,8 @@ def echo(update, context):
 
 
 def main():
+    print(wb.sheetnames)
+    
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
     # Make sure to set use_context=True to use the new context based callbacks
