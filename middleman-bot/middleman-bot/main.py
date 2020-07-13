@@ -17,7 +17,7 @@ bot.
 # MORJES TÄSSÄ MUN MUUTOS
 import logging
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -45,9 +45,17 @@ def help_command(update, context):
     update.message.reply_text('Help!')
 
 
-def echo(update, context):
+def echo_text(update, context):
     """Echo the user message."""
     update.message.reply_text(update.message.text)
+
+
+# ///////////////////////////////////////////////////////////////////////
+def echo_pic(update, context):
+    update.message.reply_text("Nice pic!")
+
+def reply_filter(update, context):
+    update.message.reply_text("Nice filter!")
 
 
 def main():
@@ -59,6 +67,7 @@ def main():
     # Post version 12 this will no longer be necessary
     updater = Updater("1182411075:AAGsO0gh6609YJTeGa09CBRAZePXm6m5Ivo", use_context=True)
 
+
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
@@ -66,8 +75,14 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help_command))
 
+
+    sites = ['36G', '46G', '47G']
+
     # on noncommand i.e message - echo the message on Telegram
-    dp.add_handler(MessageHandler(Filters.text, echo))
+    dp.add_handler(MessageHandler(Filters.text(sites), reply_filter))
+    dp.add_handler(MessageHandler(Filters.text, echo_text))
+    dp.add_handler(MessageHandler(Filters.photo, echo_pic))
+
 
     # Start the Bot
     updater.start_polling()
