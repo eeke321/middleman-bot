@@ -12,7 +12,7 @@ Basic Echobot example, repeats messages.
 Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
-
+# MORJES TÄSSÄ MUN MUUTOS
 import logging
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
