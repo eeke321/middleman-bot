@@ -54,12 +54,11 @@ def echo_text(update, context):
 def echo_pic(update, context):
     update.message.reply_text("Nice pic!")
 
-def reply_filter(update, context):
-    update.message.reply_text("Nice filter!")
+def reply_site(update, context):
+    update.message.reply_text("Nice site!")
 
 
 def main():
-    print(wb.sheetnames)
     
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
@@ -76,11 +75,40 @@ def main():
     dp.add_handler(CommandHandler("help", help_command))
 
 
-    sites = ['36G', '46G', '47G']
+    print(wb.sheetnames)
+
+    site_code_sheet = wb['sites']
+    opening_code_sheet = wb['openings']
+
+    i = 0
+    sites = []
+    openings = []
+
+    while True:
+        i += 1
+        # Get value from sheet cell
+        site_code = site_code_sheet.cell(row = i, column = 1).value
+        opening_code = opening_code_sheet.cell(row = i, column = 1).value
+
+        # Add value to list
+        if (site_code != None):
+            sites.append(site_code)
+        if (opening_code != None):
+            openings.append(opening_code)
+
+        else:
+            break
+
+
+    print(sites)
+    print(openings)
+
+
+    dp.add_handler(MessageHandler(Filters.text(sites), reply_site))
 
     # on noncommand i.e message - echo the message on Telegram
-    dp.add_handler(MessageHandler(Filters.text(sites), reply_filter))
     dp.add_handler(MessageHandler(Filters.text, echo_text))
+
     dp.add_handler(MessageHandler(Filters.photo, echo_pic))
 
 
