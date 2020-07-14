@@ -15,6 +15,8 @@ bot.
 
 
 # MORJES TÄSSÄ MUN MUUTOS
+# LIT 
+
 import logging
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter
@@ -46,16 +48,23 @@ def help_command(update, context):
 
 
 def echo_text(update, context):
-    """Echo the user message."""
-    update.message.reply_text(update.message.text)
+    update.message.reply_text('?')
+    print("message id: ", update.message.message_id)
+    print("chat id: ", update.message.chat.id)
 
 
 # ///////////////////////////////////////////////////////////////////////
 def echo_pic(update, context):
+    # Todo: Echo pic
     update.message.reply_text("Nice pic!")
 
 def reply_site(update, context):
+    context.user_data['site'] = update.message.text
     update.message.reply_text("Nice site!")
+
+def reply_opening(update, context):
+    print(context.user_data['site'])
+    update.message.reply_text("Nice opening!")
 
 
 def main():
@@ -84,11 +93,16 @@ def main():
     sites = []
     openings = []
 
+    # Todo: Multiple loops
     while True:
         i += 1
         # Get value from sheet cell
         site_code = site_code_sheet.cell(row = i, column = 1).value
         opening_code = opening_code_sheet.cell(row = i, column = 1).value
+
+        # If all cells empty
+        if (site_code == None and opening_code == None):
+            break
 
         # Add value to list
         if (site_code != None):
@@ -96,20 +110,17 @@ def main():
         if (opening_code != None):
             openings.append(opening_code)
 
-        else:
-            break
-
 
     print(sites)
     print(openings)
 
-
+    dp.add_handler(MessageHandler(Filters.photo, echo_pic))
     dp.add_handler(MessageHandler(Filters.text(sites), reply_site))
+    dp.add_handler(MessageHandler(Filters.text(openings), reply_opening))
 
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, echo_text))
 
-    dp.add_handler(MessageHandler(Filters.photo, echo_pic))
 
 
     # Start the Bot
