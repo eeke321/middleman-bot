@@ -3,20 +3,20 @@
 # LIT 
 
 import logging
-
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackContext
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
-
 logger = logging.getLogger(__name__)
+
+
 
 import os
 print(os.getcwd())
 
-import openpyxl
 
+import openpyxl
 wb = openpyxl.load_workbook('file.xlsx')
 
 
@@ -31,14 +31,6 @@ def help_command(update, context):
     """Send a message when the command /help is issued."""
     update.message.reply_text('Help!')
 
-
-def echo_text(update, context):
-    update.message.reply_text('?')
-    print("message id: ", update.message.message_id)
-    print("chat id: ", update.message.chat.id)
-
-
-# ///////////////////////////////////////////////////////////////////////
 
 def ready(context):
     if (context.user_data['site'] != None and context.user_data['opening'] != None):
@@ -56,9 +48,16 @@ def combine(context):
 
     return combine
 
+def echo_text(update, context):
+    update.message.reply_text('?')
+    print("message id: ", update.message.message_id)
+    print("chat id: ", update.message.chat.id)
+
 def echo_pic(update, context):
     # Todo: Echo pic
     update.message.reply_text("Nice pic!")
+
+
 
 def reply_site(update, context):
     context.user_data['site'] = update.message.text
@@ -91,14 +90,14 @@ def main():
 
     print(wb.sheetnames)
 
-    p0 = packet("None", "None")
-
     site_code_sheet = wb['sites']
     opening_code_sheet = wb['openings']
 
     i = 0
     sites = []
     openings = []
+
+    """Initialize"""
 
     # Todo: Multiple loops
     while True:
