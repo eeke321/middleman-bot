@@ -1,25 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# This program is dedicated to the public domain under the CC0 license.
-
-"""
-Simple Bot to reply to Telegram messages.
-First, a few handler functions are defined. Then, those functions are passed to
-the Dispatcher and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-Usage:
-Basic Echobot example, repeats messages.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
-"""
-
 
 # MORJES TÄSSÄ MUN MUUTOS
 # LIT 
 
 import logging
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackContext
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -54,6 +39,23 @@ def echo_text(update, context):
 
 
 # ///////////////////////////////////////////////////////////////////////
+
+def ready(context):
+    if (context.user_data['site'] != None and context.user_data['opening'] != None):
+        return True
+    else:
+        return False
+
+def combine(context):
+    site = "To site: " + context.user_data['site']
+    opening = "From opening: " + context.user_data['opening']
+
+    combine = "New Lift: \n" + site + "\n" + opening
+
+    print("COMBINED")
+
+    return combine
+
 def echo_pic(update, context):
     # Todo: Echo pic
     update.message.reply_text("Nice pic!")
@@ -62,10 +64,15 @@ def reply_site(update, context):
     context.user_data['site'] = update.message.text
     update.message.reply_text("Nice site!")
 
+    if (ready(context) == True):
+        update.message.reply_text(combine(context))
+
 def reply_opening(update, context):
-    print(context.user_data['site'])
+    context.user_data['opening'] = update.message.text
     update.message.reply_text("Nice opening!")
 
+    if (ready(context) == True):
+        update.message.reply_text(combine(context))
 
 def main():
     
@@ -75,7 +82,6 @@ def main():
     # Post version 12 this will no longer be necessary
     updater = Updater("1182411075:AAGsO0gh6609YJTeGa09CBRAZePXm6m5Ivo", use_context=True)
 
-
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
@@ -83,8 +89,9 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help_command))
 
-
     print(wb.sheetnames)
+
+    p0 = packet("None", "None")
 
     site_code_sheet = wb['sites']
     opening_code_sheet = wb['openings']
@@ -126,10 +133,13 @@ def main():
     # Start the Bot
     updater.start_polling()
 
+    print("TEST")
+
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
+
 
 
 if __name__ == '__main__':
