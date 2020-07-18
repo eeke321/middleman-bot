@@ -2,6 +2,8 @@
 # MORJES TÄSSÄ MUN MUUTOS
 # LIT 
 
+""
+
 import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackContext
 
@@ -10,11 +12,8 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-
 import os
 print(os.getcwd())
-
 
 import openpyxl
 wb = openpyxl.load_workbook('file.xlsx')
@@ -32,8 +31,12 @@ def help_command(update, context):
     update.message.reply_text('Help!')
 
 
+
+
 def ready(context):
-    if (context.user_data['site'] != None and context.user_data['opening'] != None):
+    if (context.user_data['photo'] != None and
+        context.user_data['site'] != None and
+        context.user_data['opening'] != None):
         return True
     else:
         return False
@@ -46,6 +49,9 @@ def combine(context):
 
     print("COMBINED")
 
+    context.user_data['site'] = None
+    context.user_data['opening'] = None
+
     return combine
 
 def echo_text(update, context):
@@ -53,25 +59,32 @@ def echo_text(update, context):
     print("message id: ", update.message.message_id)
     print("chat id: ", update.message.chat.id)
 
-def echo_pic(update, context):
-    # Todo: Echo pic
-    update.message.reply_text("Nice pic!")
+def reply_pic(update, context):
+    context.user_data['photo'] = update.message.photo[-1]
+    update.message.reply_text("Nice photo!")
 
+    context.user_data['site'] = None
+    context.user_data['opening'] = None
 
 
 def reply_site(update, context):
     context.user_data['site'] = update.message.text
+    context.user_data['site_set'] = True
+
     update.message.reply_text("Nice site!")
 
-    if (ready(context) == True):
-        update.message.reply_text(combine(context))
+    #if (ready(context) == True):
+    #    update.message.reply_text(combine(context))
 
 def reply_opening(update, context):
     context.user_data['opening'] = update.message.text
+    context.user_data['opening_set'] = True
+
     update.message.reply_text("Nice opening!")
 
     if (ready(context) == True):
-        update.message.reply_text(combine(context))
+        photo = context.user_data['photo']
+        update.message.reply_photo(photo, combine(context))
 
 def main():
     
@@ -120,7 +133,7 @@ def main():
     print(sites)
     print(openings)
 
-    dp.add_handler(MessageHandler(Filters.photo, echo_pic))
+    dp.add_handler(MessageHandler(Filters.photo, reply_pic))
     dp.add_handler(MessageHandler(Filters.text(sites), reply_site))
     dp.add_handler(MessageHandler(Filters.text(openings), reply_opening))
 
@@ -131,8 +144,6 @@ def main():
 
     # Start the Bot
     updater.start_polling()
-
-    print("TEST")
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
