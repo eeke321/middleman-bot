@@ -19,6 +19,8 @@ import openpyxl
 wb = openpyxl.load_workbook('file.xlsx')
 
 
+group_chat_id = "-415596535"
+
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
@@ -31,7 +33,9 @@ def help_command(update, context):
     update.message.reply_text('Help!')
 
 
-
+def test_print(update, context):
+    print("Test Print:")
+    print(update.message.chat)
 
 def ready(context):
     if (context.user_data['photo'] != None and
@@ -84,7 +88,10 @@ def reply_opening(update, context):
 
     if (ready(context) == True):
         photo = context.user_data['photo']
-        update.message.reply_photo(photo, combine(context))
+        #update.message.reply_photo(photo, combine(context))
+        update.message.reply_text("Lift send to group.")
+
+        context.bot.send_photo(-415596535, photo, combine(context))
 
 def main():
     
