@@ -5,7 +5,9 @@
 ""
 
 import logging
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackContext
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackContext, CallbackQueryHandler
+from enum import IntEnum
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -21,6 +23,15 @@ wb = openpyxl.load_workbook('file.xlsx')
 
 group_chat_id = "-415596535"
 
+class State(IntEnum):
+    EMPTY = 0
+    PHOTO = 1
+    SITE = 2
+    OPENING = 3
+    MESSAGE = 4
+    PREVIEW = 5
+
+
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
@@ -35,12 +46,21 @@ def help_command(update, context):
 
 def test_print(update, context):
     print("Test Print:")
-    print(update.message.chat)
+    print("message id: ", update.message.message_id)
+    print("chat id: ", update.message.chat.id)
+    print(context.user_data['state'])
+
+def button(update, context):
+    query = update.callback_query
+
+# CallbackQueries need to be answered, even if no notification to the user is needed
+# Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
+    query.answer()
+    query.edit_message_text(text="Selected option: {}".format(query.data))
 
 def ready(context):
     if (context.user_data['photo'] != None and
-        context.user_data['site'] != None and
-        context.user_data['opening'] != None):
+        context.user_data['state'] == State.PREVIEW):
         return True
     else:
         return False
@@ -48,20 +68,50 @@ def ready(context):
 def combine(context):
     site = "To site: " + context.user_data['site']
     opening = "From opening: " + context.user_data['opening']
+    message = "# " + context.user_data['message']
 
-    combine = "New Lift: \n" + site + "\n" + opening
+    combine = "New Lift: \n" + site + "\n" + opening + '\n' + message
 
     print("COMBINED")
 
-    context.user_data['site'] = None
-    context.user_data['opening'] = None
-
     return combine
 
-def echo_text(update, context):
-    update.message.reply_text('?')
-    print("message id: ", update.message.message_id)
-    print("chat id: ", update.message.chat.id)
+def reply_text(update, context):
+    if (context.user_data['state'] == State.MESSAGE):
+        update.message.reply_text("Nice message!")
+
+        context.user_data['message'] = update.message.text
+        context.user_data['state'] = State.PREVIEW
+    
+    if (ready(context) == True):
+        photo = context.user_data['photo']
+        update.message.reply_text("Preview:")
+        update.message.reply_photo(photo, combine(context))
+
+        keyboard = [[InlineKeyboardButton("Yes", callback_data = "Yes"),
+                    InlineKeyboardButton("No", callback_data = "No")]]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text('Create lift?', reply_markup=reply_markup)
+
+        context.bot.send_photo(-415596535, photo, combine(context))
+
+        context.user_data['photo'] = None
+        context.user_data['site'] = None
+        context.user_data['opening'] = None
+        context.user_data['message'] = None
+
+    else:
+        update.message.reply_text("?")
+
+    #keyboard = [[InlineKeyboardButton("Add", callback_data="Add"),
+    #             InlineKeyboardButton("Skip", callback_data="Skip"),
+    #             InlineKeyboardButton("Ready", callback_data="Ready")],
+
+    #            [InlineKeyboardButton("Type", callback_data="Type")]]
+
+    #reply_markup = InlineKeyboardMarkup(keyboard)
+    #update.message.reply_text('Please choose:', reply_markup=reply_markup)
 
 def reply_pic(update, context):
     context.user_data['photo'] = update.message.photo[-1]
@@ -70,12 +120,16 @@ def reply_pic(update, context):
     context.user_data['site'] = None
     context.user_data['opening'] = None
 
+    context.user_data['state'] = State.SITE
+
 
 def reply_site(update, context):
     context.user_data['site'] = update.message.text
     context.user_data['site_set'] = True
 
     update.message.reply_text("Nice site!")
+
+    context.user_data['state'] = State.OPENING
 
     #if (ready(context) == True):
     #    update.message.reply_text(combine(context))
@@ -86,12 +140,9 @@ def reply_opening(update, context):
 
     update.message.reply_text("Nice opening!")
 
-    if (ready(context) == True):
-        photo = context.user_data['photo']
-        #update.message.reply_photo(photo, combine(context))
-        update.message.reply_text("Lift send to group.")
+    context.user_data['state'] = State.MESSAGE
 
-        context.bot.send_photo(-415596535, photo, combine(context))
+
 
 def main():
     
@@ -145,8 +196,9 @@ def main():
     dp.add_handler(MessageHandler(Filters.text(openings), reply_opening))
 
     # on noncommand i.e message - echo the message on Telegram
-    dp.add_handler(MessageHandler(Filters.text, echo_text))
+    dp.add_handler(MessageHandler(Filters.text, reply_text))
 
+    dp.add_handler(CallbackQueryHandler(button))
 
 
     # Start the Bot
