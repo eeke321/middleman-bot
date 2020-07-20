@@ -5,9 +5,11 @@
 ""
 
 import logging
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackContext, CallbackQueryHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackContext, CallbackQueryHandler, CallbackContext
 from enum import IntEnum
+
+from lift import Lift, LiftState, load_lifts, add_lift
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -23,8 +25,8 @@ wb = openpyxl.load_workbook('file.xlsx')
 
 group_chat_id = "-415596535"
 
-class State(IntEnum):
-    EMPTY = 0
+class ConversationState(IntEnum):
+    NONE = 0
     PHOTO = 1
     SITE = 2
     OPENING = 3
@@ -34,23 +36,23 @@ class State(IntEnum):
 
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
-def start(update, context):
+def start(update : Update, context : CallbackContext):
     """Send a message when the command /start is issued."""
     update.message.reply_text('Hi!')
 
 
-def help_command(update, context):
+def help_command(update : Update, context : CallbackContext):
     """Send a message when the command /help is issued."""
     update.message.reply_text('Help!')
 
 
-def test_print(update, context):
+def test_print(update : Update, context : CallbackContext):
     print("Test Print:")
     print("message id: ", update.message.message_id)
     print("chat id: ", update.message.chat.id)
     print(context.user_data['state'])
 
-def button(update, context):
+def button(update : Update, context : CallbackContext):
     query = update.callback_query
 
 # CallbackQueries need to be answered, even if no notification to the user is needed
@@ -58,16 +60,16 @@ def button(update, context):
     query.answer()
     query.edit_message_text(text="Selected option: {}".format(query.data))
 
-def ready(context):
+def ready(context : CallbackContext):
     if (context.user_data['photo'] != None and
-        context.user_data['state'] == State.PREVIEW):
+        context.user_data['state'] == ConversationState.PREVIEW):
         return True
     else:
         return False
 
-def combine(context):
-    site = "To site: " + context.user_data['site']
-    opening = "From opening: " + context.user_data['opening']
+def combine(context : CallbackContext):
+    site = "Site: " + context.user_data['site']
+    opening = "Opening: " + context.user_data['opening']
     message = "# " + context.user_data['message']
 
     combine = "New Lift: \n" + site + "\n" + opening + '\n' + message
@@ -76,12 +78,18 @@ def combine(context):
 
     return combine
 
-def reply_text(update, context):
-    if (context.user_data['state'] == State.MESSAGE):
+def reply_test(update : Update, context : CallbackContext):
+    update.message.reply_text("Test!")
+
+    photo = context.bot_data['photo']
+    update.message.reply_photo(photo)
+
+def reply_text(update : Update, context : CallbackContext):
+    if (context.user_data['state'] == ConversationState.MESSAGE):
         update.message.reply_text("Nice message!")
 
         context.user_data['message'] = update.message.text
-        context.user_data['state'] = State.PREVIEW
+        context.user_data['state'] = ConversationState.PREVIEW
     
     if (ready(context) == True):
         photo = context.user_data['photo']
@@ -113,34 +121,34 @@ def reply_text(update, context):
     #reply_markup = InlineKeyboardMarkup(keyboard)
     #update.message.reply_text('Please choose:', reply_markup=reply_markup)
 
-def reply_pic(update, context):
+def reply_pic(update : Update, context : CallbackContext):
     context.user_data['photo'] = update.message.photo[-1]
     update.message.reply_text("Nice photo!")
 
     context.user_data['site'] = None
     context.user_data['opening'] = None
 
-    context.user_data['state'] = State.SITE
+    context.user_data['state'] = ConversationState.SITE
 
 
-def reply_site(update, context):
+def reply_site(update : Update, context : CallbackContext):
     context.user_data['site'] = update.message.text
     context.user_data['site_set'] = True
 
     update.message.reply_text("Nice site!")
 
-    context.user_data['state'] = State.OPENING
+    context.user_data['state'] = ConversationState.OPENING
 
     #if (ready(context) == True):
     #    update.message.reply_text(combine(context))
 
-def reply_opening(update, context):
+def reply_opening(update : Update, context : CallbackContext):
     context.user_data['opening'] = update.message.text
     context.user_data['opening_set'] = True
 
     update.message.reply_text("Nice opening!")
 
-    context.user_data['state'] = State.MESSAGE
+    context.user_data['state'] = ConversationState.MESSAGE
 
 
 
@@ -158,6 +166,14 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help_command))
+
+
+    lift_list = []
+    load_lifts(lift_list)
+
+    test_lift = Lift(0, 'https://telegram.org/img/t_logo.png', LiftState.NONE, "S", "O", "Note")
+    #add_lift(test_lift)
+
 
     print(wb.sheetnames)
 
@@ -190,6 +206,12 @@ def main():
 
     print(sites)
     print(openings)
+
+    
+    dp.bot_data['photo'] = test_lift.photo
+    dp.bot_data['site'] = "TEST"
+    dp.add_handler(MessageHandler(Filters.text("Test"), reply_test))
+
 
     dp.add_handler(MessageHandler(Filters.photo, reply_pic))
     dp.add_handler(MessageHandler(Filters.text(sites), reply_site))
