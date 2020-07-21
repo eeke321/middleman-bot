@@ -26,6 +26,7 @@ def load_lifts(lift_list : List):
     
     lifts_sheet = wb['lifts']
 
+
     i = 1
 
     while True:
@@ -58,6 +59,8 @@ def add_lift(lift : Lift):
     lifts_sheet.cell(row = r, column = 5).value = lift.note
 
     wb.save('lifts.xlsx')
+
+    print("Lift added!")
 
 def save_lifts(lift_list : List):
     wb = openpyxl.load_workbook('lifts.xlsx')

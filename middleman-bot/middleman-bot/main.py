@@ -8,6 +8,7 @@ import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackContext, CallbackQueryHandler, CallbackContext
 from enum import IntEnum
+from pathlib import Path
 
 from lift import Lift, LiftState, load_lifts, add_lift
 
@@ -68,11 +69,12 @@ def ready(context : CallbackContext):
         return False
 
 def combine(context : CallbackContext):
+    id = context.user_data['id']
     site = "Site: " + context.user_data['site']
     opening = "Opening: " + context.user_data['opening']
     message = "# " + context.user_data['message']
 
-    combine = "New Lift: \n" + site + "\n" + opening + '\n' + message
+    combine = "New Lift: " + str(id) + "\n" + site + "\n" + opening + '\n' + message
 
     print("COMBINED")
 
@@ -102,8 +104,16 @@ def reply_text(update : Update, context : CallbackContext):
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text('Create lift?', reply_markup=reply_markup)
 
+        add_lift(Lift(context.user_data['id'],
+                      context.user_data['photo'], 
+                      LiftState.NONE, 
+                      context.user_data['site'], 
+                      context.user_data['opening'],
+                      context.user_data['message']))
+
         context.bot.send_photo(-415596535, photo, combine(context))
 
+        context.user_data['id'] = None
         context.user_data['photo'] = None
         context.user_data['site'] = None
         context.user_data['opening'] = None
@@ -122,7 +132,23 @@ def reply_text(update : Update, context : CallbackContext):
     #update.message.reply_text('Please choose:', reply_markup=reply_markup)
 
 def reply_pic(update : Update, context : CallbackContext):
-    context.user_data['photo'] = update.message.photo[-1]
+
+    update.message.reply_text("New Lift Created!")
+
+    id = context.bot_data['last_id'] + 1
+    context.user_data['id'] = id
+
+
+    photo = update.message.photo[-1]
+    file_id = photo.file_id
+
+    context.user_data['photo'] = photo
+
+    new_file = context.bot.getFile(file_id)
+
+    file_path = "photos/" + str(id) + ".jpg"
+    new_file.download(Path(file_path))
+
     update.message.reply_text("Nice photo!")
 
     context.user_data['site'] = None
@@ -207,12 +233,11 @@ def main():
     print(sites)
     print(openings)
 
-    
-    dp.bot_data['photo'] = test_lift.photo
-    dp.bot_data['site'] = "TEST"
+    last_id = lift_list[-1].id
+
+    dp.bot_data['last_id'] = last_id
+
     dp.add_handler(MessageHandler(Filters.text("Test"), reply_test))
-
-
     dp.add_handler(MessageHandler(Filters.photo, reply_pic))
     dp.add_handler(MessageHandler(Filters.text(sites), reply_site))
     dp.add_handler(MessageHandler(Filters.text(openings), reply_opening))
