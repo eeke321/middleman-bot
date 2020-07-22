@@ -2,7 +2,30 @@
 # MORJES TÄSSÄ MUN MUUTOS
 # LIT 
 
-""
+""" TODO """
+
+""" _________ || Main || _________ """
+""" - Jortikka """
+
+""" _________ || Add || _________ """
+""" - Recognize nicnames for sites & openings"""
+
+""" _________ || Update || _________ """
+""" - File organisation """
+
+""" _________ || Code fix || _________ """
+""" - Better var names """
+""" - Better state names """
+
+""" _________ || Optimaze || _________ """
+""" - Workbook as argument """
+
+""" _________ || Polish || _________ """
+""" - User friendly conversation quide """
+
+""" _________ || BUGS || _________ """
+""" - nah """
+
 
 import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -35,23 +58,11 @@ class ConversationState(IntEnum):
     PREVIEW = 5
 
 
-# Define a few command handlers. These usually take the two arguments update and
-# context. Error handlers also receive the raised TelegramError object in error.
-def start(update : Update, context : CallbackContext):
-    """Send a message when the command /start is issued."""
-    update.message.reply_text('Hi!')
-
-
-def help_command(update : Update, context : CallbackContext):
-    """Send a message when the command /help is issued."""
-    update.message.reply_text('Help!')
-
-
 def test_print(update : Update, context : CallbackContext):
     print("Test Print:")
     print("message id: ", update.message.message_id)
     print("chat id: ", update.message.chat.id)
-    print(context.user_data['state'])
+    print(context.user_data['conv_state'])
 
 def button(update : Update, context : CallbackContext):
     query = update.callback_query
@@ -59,13 +70,46 @@ def button(update : Update, context : CallbackContext):
 # CallbackQueries need to be answered, even if no notification to the user is needed
 # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     query.answer()
+
+    if (query.data == "send_lift"):
+        add_lift(Lift(context.user_data['id'],
+            context.user_data['photo'], 
+            LiftState.NONE, 
+            context.user_data['site'], 
+            context.user_data['opening'],
+            context.user_data['message']))
+
+        context.bot.send_photo(-415596535, context.user_data['photo'], combine(context))
+
+        context.user_data['id'] = None
+        context.user_data['photo'] = None
+        context.user_data['site'] = None
+        context.user_data['opening'] = None
+        context.user_data['message'] = None
+        
+        context.user_data['conv_state'] = ConversationState.PHOTO
+
+
+    elif(query.data == "cancel_lift"):
+        context.user_data['id'] = None
+        context.user_data['photo'] = None
+        context.user_data['site'] = None
+        context.user_data['opening'] = None
+        context.user_data['message'] = None
+
+        context.user_data['conv_state'] = ConversationState.PHOTO
+
     query.edit_message_text(text="Selected option: {}".format(query.data))
+
+
+    
 
 def ready(context : CallbackContext):
     if (context.user_data['photo'] != None and
-        context.user_data['state'] == ConversationState.PREVIEW):
+        context.user_data['conv_state'] == ConversationState.PREVIEW):
         return True
     else:
+        print("not ready")
         return False
 
 def combine(context : CallbackContext):
@@ -87,49 +131,25 @@ def reply_test(update : Update, context : CallbackContext):
     update.message.reply_photo(photo)
 
 def reply_text(update : Update, context : CallbackContext):
-    if (context.user_data['state'] == ConversationState.MESSAGE):
+    if (context.user_data['conv_state'] == ConversationState.MESSAGE):
         update.message.reply_text("Nice message!")
 
         context.user_data['message'] = update.message.text
-        context.user_data['state'] = ConversationState.PREVIEW
+        context.user_data['conv_state'] = ConversationState.PREVIEW
     
     if (ready(context) == True):
         photo = context.user_data['photo']
         update.message.reply_text("Preview:")
         update.message.reply_photo(photo, combine(context))
 
-        keyboard = [[InlineKeyboardButton("Yes", callback_data = "Yes"),
-                    InlineKeyboardButton("No", callback_data = "No")]]
+        keyboard = [[InlineKeyboardButton("Yes", callback_data = "send_lift"),
+                    InlineKeyboardButton("No", callback_data = "cancel_lift")]]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text('Create lift?', reply_markup=reply_markup)
 
-        add_lift(Lift(context.user_data['id'],
-                      context.user_data['photo'], 
-                      LiftState.NONE, 
-                      context.user_data['site'], 
-                      context.user_data['opening'],
-                      context.user_data['message']))
-
-        context.bot.send_photo(-415596535, photo, combine(context))
-
-        context.user_data['id'] = None
-        context.user_data['photo'] = None
-        context.user_data['site'] = None
-        context.user_data['opening'] = None
-        context.user_data['message'] = None
-
     else:
         update.message.reply_text("?")
-
-    #keyboard = [[InlineKeyboardButton("Add", callback_data="Add"),
-    #             InlineKeyboardButton("Skip", callback_data="Skip"),
-    #             InlineKeyboardButton("Ready", callback_data="Ready")],
-
-    #            [InlineKeyboardButton("Type", callback_data="Type")]]
-
-    #reply_markup = InlineKeyboardMarkup(keyboard)
-    #update.message.reply_text('Please choose:', reply_markup=reply_markup)
 
 def reply_pic(update : Update, context : CallbackContext):
 
@@ -154,7 +174,7 @@ def reply_pic(update : Update, context : CallbackContext):
     context.user_data['site'] = None
     context.user_data['opening'] = None
 
-    context.user_data['state'] = ConversationState.SITE
+    context.user_data['conv_state'] = ConversationState.SITE
 
 
 def reply_site(update : Update, context : CallbackContext):
@@ -163,7 +183,7 @@ def reply_site(update : Update, context : CallbackContext):
 
     update.message.reply_text("Nice site!")
 
-    context.user_data['state'] = ConversationState.OPENING
+    context.user_data['conv_state'] = ConversationState.OPENING
 
     #if (ready(context) == True):
     #    update.message.reply_text(combine(context))
@@ -174,7 +194,7 @@ def reply_opening(update : Update, context : CallbackContext):
 
     update.message.reply_text("Nice opening!")
 
-    context.user_data['state'] = ConversationState.MESSAGE
+    context.user_data['conv_state'] = ConversationState.MESSAGE
 
 
 
@@ -188,10 +208,6 @@ def main():
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
-
-    # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help_command))
 
 
     lift_list = []
@@ -233,16 +249,17 @@ def main():
     print(sites)
     print(openings)
 
+    #TEMP
     last_id = lift_list[-1].id
 
     dp.bot_data['last_id'] = last_id
 
     dp.add_handler(MessageHandler(Filters.text("Test"), reply_test))
+
     dp.add_handler(MessageHandler(Filters.photo, reply_pic))
     dp.add_handler(MessageHandler(Filters.text(sites), reply_site))
     dp.add_handler(MessageHandler(Filters.text(openings), reply_opening))
 
-    # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, reply_text))
 
     dp.add_handler(CallbackQueryHandler(button))
