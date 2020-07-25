@@ -5,10 +5,16 @@
 """ TODO """
 
 """ _________ || Main || _________ """
-""" - Jortikka """
 
 """ _________ || Add || _________ """
-""" - Recognize nicnames for sites & openings"""
+""" - Lift state updating  """
+""" - Add per user signaling and linking """
+""" - Recognize nicnames for sites & openings """
+""" - Lift folders for data and photos """
+""" - Conversation state shortcuts and notes """
+""" - Callback keyboards """
+""" - User choice feedback """
+""" - User creation and setup """
 
 """ _________ || Update || _________ """
 """ - File organisation """
@@ -72,30 +78,22 @@ def button(update : Update, context : CallbackContext):
     query.answer()
 
     if (query.data == "send_lift"):
-        add_lift(Lift(context.user_data['id'],
-            context.user_data['photo'], 
+        add_lift(Lift(context.user_data['lift'].id,
+            context.user_data['lift'].photo, 
             LiftState.NONE, 
-            context.user_data['site'], 
-            context.user_data['opening'],
-            context.user_data['message']))
+            context.user_data['lift'].site, 
+            context.user_data['lift'].opening,
+            context.user_data['lift']).note)
 
-        context.bot.send_photo(-415596535, context.user_data['photo'], combine(context))
+        context.bot.send_photo(-415596535, context.user_data['lift'].photo, combine(context))
 
-        context.user_data['id'] = None
-        context.user_data['photo'] = None
-        context.user_data['site'] = None
-        context.user_data['opening'] = None
-        context.user_data['message'] = None
+        context.user_data['lift'].clear()
         
         context.user_data['conv_state'] = ConversationState.PHOTO
 
 
     elif(query.data == "cancel_lift"):
-        context.user_data['id'] = None
-        context.user_data['photo'] = None
-        context.user_data['site'] = None
-        context.user_data['opening'] = None
-        context.user_data['message'] = None
+        context.user_data['lift'].clear()
 
         context.user_data['conv_state'] = ConversationState.PHOTO
 
@@ -105,7 +103,7 @@ def button(update : Update, context : CallbackContext):
     
 
 def ready(context : CallbackContext):
-    if (context.user_data['photo'] != None and
+    if (context.user_data['lift'].photo != None and
         context.user_data['conv_state'] == ConversationState.PREVIEW):
         return True
     else:
@@ -113,12 +111,12 @@ def ready(context : CallbackContext):
         return False
 
 def combine(context : CallbackContext):
-    id = context.user_data['id']
-    site = "Site: " + context.user_data['site']
-    opening = "Opening: " + context.user_data['opening']
-    message = "# " + context.user_data['message']
+    id = context.user_data['lift'].id
+    site = "Site: " + context.user_data['lift'].site
+    opening = "Opening: " + context.user_data['lift'].opening
+    note = "# " + context.user_data['lift'].note
 
-    combine = "New Lift: " + str(id) + "\n" + site + "\n" + opening + '\n' + message
+    combine = "New Lift: " + str(id) + "\n" + site + "\n" + opening + '\n' + note
 
     print("COMBINED")
 
@@ -134,11 +132,11 @@ def reply_text(update : Update, context : CallbackContext):
     if (context.user_data['conv_state'] == ConversationState.MESSAGE):
         update.message.reply_text("Nice message!")
 
-        context.user_data['message'] = update.message.text
+        context.user_data['lift'].note = update.message.text
         context.user_data['conv_state'] = ConversationState.PREVIEW
     
     if (ready(context) == True):
-        photo = context.user_data['photo']
+        photo = context.user_data['lift'].photo
         update.message.reply_text("Preview:")
         update.message.reply_photo(photo, combine(context))
 
@@ -155,14 +153,19 @@ def reply_pic(update : Update, context : CallbackContext):
 
     update.message.reply_text("New Lift Created!")
 
-    id = context.bot_data['last_id'] + 1
-    context.user_data['id'] = id
+    template_lift = Lift(0, 'https://telegram.org/img/t_logo.png', LiftState.NONE, "S", "O", "None") 
+    context.user_data['lift'] = template_lift
 
+    # NEW
+    id = context.bot_data['last_id'] + 1
+    context.user_data['lift'].id = id
 
     photo = update.message.photo[-1]
     file_id = photo.file_id
 
-    context.user_data['photo'] = photo
+
+    context.user_data['lift'].photo = photo
+
 
     new_file = context.bot.getFile(file_id)
 
@@ -170,15 +173,18 @@ def reply_pic(update : Update, context : CallbackContext):
     new_file.download(Path(file_path))
 
     update.message.reply_text("Nice photo!")
+    
+    context.user_data['lift'].site = None
+    context.user_data['lift'].opening = None
+    context.user_data['lift'].note = None
 
-    context.user_data['site'] = None
-    context.user_data['opening'] = None
 
     context.user_data['conv_state'] = ConversationState.SITE
 
 
 def reply_site(update : Update, context : CallbackContext):
-    context.user_data['site'] = update.message.text
+    context.user_data['lift'].site = update.message.text
+
     context.user_data['site_set'] = True
 
     update.message.reply_text("Nice site!")
@@ -189,7 +195,7 @@ def reply_site(update : Update, context : CallbackContext):
     #    update.message.reply_text(combine(context))
 
 def reply_opening(update : Update, context : CallbackContext):
-    context.user_data['opening'] = update.message.text
+    context.user_data['lift'].opening = update.message.text
     context.user_data['opening_set'] = True
 
     update.message.reply_text("Nice opening!")

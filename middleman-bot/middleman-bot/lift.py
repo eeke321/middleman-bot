@@ -19,6 +19,14 @@ class Lift:
         self.opening = opening
         self.note = note
 
+    def clear(self):
+        self.id = None
+        self.photo = None
+        self.state = LiftState.NONE
+        self.site = None
+        self.opening = None
+        self.note = None
+
 import openpyxl
 
 def load_lifts(lift_list : List):
