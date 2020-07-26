@@ -28,12 +28,22 @@ def combine(context : CallbackContext):
     opening = "Opening: " + context.user_data['lift'].opening
     note = "# " + context.user_data['lift'].note
 
-    combine = "New Lift: " + str(id) + "\n" + site + "\n" + opening + '\n' + note
+    combine = "New Lift: ID" + str(id) + "\n" + site + "\n" + opening + '\n' + note
 
     print("COMBINED")
 
     return combine
 
+def reply_lift(update : Update, context : CallbackContext):
+        photo = 'https://telegram.org/img/t_logo.png'
+        update.message.reply_photo(photo)
+
+        keyboard = [[InlineKeyboardButton("Update State", callback_data = "lift_update_state"),
+                    InlineKeyboardButton("Delete", callback_data = "lift_delete")],
+                    [InlineKeyboardButton("Link", callback_data = "lift_link")]]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text('Modify Lift: ', reply_markup=reply_markup)
 
 def reply_test(update : Update, context : CallbackContext):
     update.message.reply_text("Test!")

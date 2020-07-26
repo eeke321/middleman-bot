@@ -5,10 +5,9 @@
 """ TODO """
 
 """ _________ || Main || _________ """
-""" - File organisation """
+""" - Lift state updating """
 
 """ _________ || Add || _________ """
-""" - Lift state updating  """
 """ - Add per user signaling and linking """
 """ - Recognize nicnames for sites & openings """
 """ - Lift folders for data and photos """
@@ -16,10 +15,13 @@
 """ - Callback keyboards """
 """ - User choice feedback """
 """ - User creation and setup """
+""" - Return lift """
 
 """ _________ || Update || _________ """
+""" - Photo folder location change """
 
 """ _________ || Code fix || _________ """
+""" - COMMENTS """
 """ - Better var names """
 """ - Better state names """
 
@@ -30,7 +32,12 @@
 """ - User friendly conversation quide """
 
 """ _________ || BUGS || _________ """
-""" - nah """
+""" - If conversation starts without photo, error ocurs """
+"""     -> Add something that initializes user_data """
+
+""" _________ || Future || _________ """
+""" - Software for computers """
+
 
 
 import logging
@@ -39,7 +46,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseF
 from pathlib import Path
 
 from lift import Lift, LiftState, load_lifts, add_lift
-from message_handlers import reply_test, reply_text, reply_photo, reply_site, reply_opening, combine
+from message_handlers import reply_test, reply_text, reply_photo, reply_site, reply_opening, reply_lift, combine
 from message_handlers import ConversationState
 
 # Enable logging
@@ -95,9 +102,7 @@ def button(update : Update, context : CallbackContext):
     query.edit_message_text(text="Selected option: {}".format(query.data))
 
 
-    
-
-
+   
 
 
 def main():
@@ -156,7 +161,8 @@ def main():
 
     dp.bot_data['last_id'] = last_id
 
-    dp.add_handler(MessageHandler(Filters.text("Test"), reply_test))
+    #dp.add_handler(MessageHandler(Filters.text("Test"), reply_test))
+    dp.add_handler(MessageHandler(Filters.regex(r'ID'), reply_lift))
 
     dp.add_handler(MessageHandler(Filters.photo, reply_photo))
     dp.add_handler(MessageHandler(Filters.text(sites), reply_site))

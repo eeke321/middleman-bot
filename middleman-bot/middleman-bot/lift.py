@@ -70,6 +70,24 @@ def add_lift(lift : Lift):
 
     print("Lift added!")
 
+def modify_lift(lift : Lift, id):
+    wb = openpyxl.load_workbook('lifts.xlsx')
+    lifts_sheet = wb['lifts']
+
+    r = id
+
+    lifts_sheet.cell(row = r, column = 1).value = lift.id
+    lifts_sheet.cell(row = r, column = 2).value = lift.state.name
+    lifts_sheet.cell(row = r, column = 3).value = lift.site
+    lifts_sheet.cell(row = r, column = 4).value = lift.opening
+    lifts_sheet.cell(row = r, column = 5).value = lift.note
+
+    wb.save('lifts.xlsx')
+
+    print("Lift added!")
+
+
+
 def save_lifts(lift_list : List):
     wb = openpyxl.load_workbook('lifts.xlsx')
 
