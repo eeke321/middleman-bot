@@ -6,16 +6,16 @@
 """ TODO """
 
 """ _________ || Main || _________ """
-""" - Lift state updating """
+""" - Lift state updating (E) """
 
 """ _________ || Add || _________ """
-""" - Add per user signaling and linking """
+""" - Add per user signaling and linking (E) """
 """ - Recognize nicnames for sites & openings """
 """ - Lift folders for data and photos """
-""" - Conversation state shortcuts and notes """
+""" - Conversation state shortcuts and notes (E) """
 """ - Callback keyboards """
 """ - User choice feedback """
-""" - User creation and setup """
+""" - User creation and setup (E) """
 """ - Return lift """
 
 """ _________ || Update || _________ """
@@ -23,8 +23,8 @@
 
 """ _________ || Code fix || _________ """
 """ - COMMENTS """
-""" - Better var names """
-""" - Better state names """
+""" - Better var names (E) """
+""" - Better state names (E) """
 
 """ _________ || Optimaze || _________ """
 """ - Workbook as argument """
@@ -37,7 +37,7 @@
 """     -> Add something that initializes user_data """
 
 """ _________ || Future || _________ """
-""" - Software for computers """
+""" - Software for computers (E) """
 
 
 
