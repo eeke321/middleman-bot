@@ -4,6 +4,7 @@ from enum import IntEnum
 
 from lift import Lift, LiftState, load_lifts, add_lift
 from pathlib import Path
+from enums import BCD
 
 
 class ConversationState(IntEnum):
@@ -28,7 +29,7 @@ def combine(context : CallbackContext):
     opening = "Opening: " + context.user_data['lift'].opening
     note = "# " + context.user_data['lift'].note
 
-    combine = "New Lift: ID" + str(id) + "\n" + site + "\n" + opening + '\n' + note
+    combine = "New Lift: ST" + str(id) + "\n" + site + "\n" + opening + '\n' + note
 
     print("COMBINED")
 
@@ -38,12 +39,12 @@ def reply_lift(update : Update, context : CallbackContext):
         photo = 'https://telegram.org/img/t_logo.png'
         update.message.reply_photo(photo)
 
-        keyboard = [[InlineKeyboardButton("Update State", callback_data = "lift_update_state"),
-                    InlineKeyboardButton("Delete", callback_data = "lift_delete")],
-                    [InlineKeyboardButton("Link", callback_data = "lift_link")]]
+        keyboard = [[InlineKeyboardButton("Update State", callback_data = BCD.REPLY_LIFT_UPDATE_STATE.name),
+                    InlineKeyboardButton("Delete", callback_data = BCD.REPLY_LIFT_DELETE.name),
+                    InlineKeyboardButton("Link", callback_data = BCD.REPLT_LIFT_LINK.name)]]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
-        update.message.reply_text('Modify Lift: ', reply_markup=reply_markup)
+        update.message.reply_text("Modify Lift: " + update.message.text, reply_markup=reply_markup)
 
 def reply_test(update : Update, context : CallbackContext):
     update.message.reply_text("Test!")
@@ -63,8 +64,8 @@ def reply_text(update : Update, context : CallbackContext):
         update.message.reply_text("Preview:")
         update.message.reply_photo(photo, combine(context))
 
-        keyboard = [[InlineKeyboardButton("Yes", callback_data = "send_lift"),
-                    InlineKeyboardButton("No", callback_data = "cancel_lift")]]
+        keyboard = [[InlineKeyboardButton("Yes", callback_data = BCD.REPLY_SEND_LIFT.name),
+                    InlineKeyboardButton("No", callback_data = BCD.REPLY_CANCEL_LIFT.name)]]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text('Create lift?', reply_markup=reply_markup)

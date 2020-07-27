@@ -8,7 +8,9 @@ class LiftState(Enum):
     SHORE = 1
     OPENING = 2
     SITE = 3
-    LOST = 4
+    MISSING = 4
+    READY = 5
+
 
 class Lift:
     def __init__(self, id, photo, state, site, opening, note):
@@ -74,17 +76,15 @@ def modify_lift(lift : Lift, id):
     wb = openpyxl.load_workbook('lifts.xlsx')
     lifts_sheet = wb['lifts']
 
-    r = id
-
-    lifts_sheet.cell(row = r, column = 1).value = lift.id
-    lifts_sheet.cell(row = r, column = 2).value = lift.state.name
-    lifts_sheet.cell(row = r, column = 3).value = lift.site
-    lifts_sheet.cell(row = r, column = 4).value = lift.opening
-    lifts_sheet.cell(row = r, column = 5).value = lift.note
+    lifts_sheet.cell(row = id, column = 1).value = lift.id
+    lifts_sheet.cell(row = id, column = 2).value = lift.state.name
+    lifts_sheet.cell(row = id, column = 3).value = lift.site
+    lifts_sheet.cell(row = id, column = 4).value = lift.opening
+    lifts_sheet.cell(row = id, column = 5).value = lift.note
 
     wb.save('lifts.xlsx')
 
-    print("Lift added!")
+    print("Lift modified!")
 
 
 

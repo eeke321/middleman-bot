@@ -31,6 +31,7 @@
 
 """ _________ || Polish || _________ """
 """ - User friendly conversation quide """
+""" - Suqqest next state when updating it and highlight current one"""
 
 """ _________ || BUGS || _________ """
 """ - If conversation starts without photo, error ocurs """
@@ -38,17 +39,21 @@
 
 """ _________ || Future || _________ """
 """ - Software for computers (E) """
+""" - Shipments, Lifts, Returns """
+""" - Templates (Requests) """
 
 
 
 import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackContext, CallbackQueryHandler, CallbackContext
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseFilter, CallbackContext, CallbackQueryHandler, CallbackContext, ConversationHandler
 from pathlib import Path
 
 from lift import Lift, LiftState, load_lifts, add_lift
 from message_handlers import reply_test, reply_text, reply_photo, reply_site, reply_opening, reply_lift, combine
 from message_handlers import ConversationState
+
+from enums import BCD
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -67,6 +72,9 @@ group_chat_id = "-415596535"
 
 
 
+
+
+
 def test_print(update : Update, context : CallbackContext):
     print("Test Print:")
     print("message id: ", update.message.message_id)
@@ -80,7 +88,7 @@ def button(update : Update, context : CallbackContext):
 # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     query.answer()
 
-    if (query.data == "send_lift"):
+    if (query.data == BCD.REPLY_SEND_LIFT.name):
         add_lift(Lift(context.user_data['lift'].id,
             context.user_data['lift'].photo, 
             LiftState.NONE, 
@@ -94,13 +102,30 @@ def button(update : Update, context : CallbackContext):
         
         context.user_data['conv_state'] = ConversationState.PHOTO
 
+        query.edit_message_text(text="Send to group")
 
-    elif(query.data == "cancel_lift"):
+
+    elif(query.data == BCD.REPLY_CANCEL_LIFT.name):
         context.user_data['lift'].clear()
 
         context.user_data['conv_state'] = ConversationState.PHOTO
 
-    query.edit_message_text(text="Selected option: {}".format(query.data))
+        query.edit_message_text(text="Cancelled")
+    
+    elif(query.data == BCD.REPLY_LIFT_UPDATE_STATE.name):
+
+        keyboard = [[InlineKeyboardButton("Shore", callback_data = BCD.LIFT_STATE_SHORE.name),
+                    InlineKeyboardButton("Opening", callback_data = BCD.LIFT_STATE_OPENING.name),
+                    InlineKeyboardButton("Site", callback_data = BCD.LIFT_STATE_SITE.name),
+                    InlineKeyboardButton("Missing", callback_data = BCD.LIFT_STATE_MISSING.name),
+                    InlineKeyboardButton("Ready", callback_data = BCD.LIFT_STATE_READY.name)]]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        query.edit_message_reply_markup(reply_markup=reply_markup)
+    
+    #query.edit_message_text(text="Selected option: {}".format(query.data))
+
+
 
 
    
@@ -162,8 +187,13 @@ def main():
 
     dp.bot_data['last_id'] = last_id
 
+
+    #conv_handler = ConversationHandler(
+    #    entry_points = [MessageHandler(Filters.text("Conv"))],
+    #    states = )
+
     #dp.add_handler(MessageHandler(Filters.text("Test"), reply_test))
-    dp.add_handler(MessageHandler(Filters.regex(r'ID'), reply_lift))
+    dp.add_handler(MessageHandler(Filters.regex(r'ST'), reply_lift))
 
     dp.add_handler(MessageHandler(Filters.photo, reply_photo))
     dp.add_handler(MessageHandler(Filters.text(sites), reply_site))
