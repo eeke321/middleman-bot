@@ -21,6 +21,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="callback_query_handlers.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="enums.py">
       <SubType>Code</SubType>
     </Compile>

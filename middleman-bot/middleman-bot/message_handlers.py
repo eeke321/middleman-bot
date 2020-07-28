@@ -1,18 +1,18 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import MessageHandler, CallbackContext, CallbackQueryHandler, CallbackContext
-from enum import IntEnum
+from telegram.ext import MessageHandler, CallbackContext, CallbackQueryHandler, CallbackContext, ConversationHandler
+from enum import Enum, IntEnum
 
 from lift import Lift, LiftState, load_lifts, add_lift
 from pathlib import Path
 from enums import BCD
 
 
-class ConversationState(IntEnum):
+class ConversationState(Enum):
     NONE = 0
     PHOTO = 1
     SITE = 2
     OPENING = 3
-    MESSAGE = 4
+    NOTE = 4
     PREVIEW = 5
 
 def ready(context : CallbackContext):
@@ -46,19 +46,20 @@ def reply_lift(update : Update, context : CallbackContext):
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text("Modify Lift: " + update.message.text, reply_markup=reply_markup)
 
+        return ConversationState.NONE
+
 def reply_test(update : Update, context : CallbackContext):
     update.message.reply_text("Test!")
 
     photo = context.bot_data['photo']
     update.message.reply_photo(photo)
 
-def reply_text(update : Update, context : CallbackContext):
-    if (context.user_data['conv_state'] == ConversationState.MESSAGE):
-        update.message.reply_text("Nice message!")
+def reply_note(update : Update, context : CallbackContext):
+    update.message.reply_text("Nice note!")
 
-        context.user_data['lift'].note = update.message.text
-        context.user_data['conv_state'] = ConversationState.PREVIEW
-    
+    context.user_data['lift'].note = update.message.text
+    context.user_data['conv_state'] = ConversationState.PREVIEW
+
     if (ready(context) == True):
         photo = context.user_data['lift'].photo
         update.message.reply_text("Preview:")
@@ -70,8 +71,13 @@ def reply_text(update : Update, context : CallbackContext):
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text('Create lift?', reply_markup=reply_markup)
 
-    else:
+    return ConversationState.PREVIEW
+
+
+def reply_text(update : Update, context : CallbackContext):
         update.message.reply_text("?")
+
+        return ConversationState.NONE
 
 def reply_photo(update : Update, context : CallbackContext):
 
@@ -96,7 +102,7 @@ def reply_photo(update : Update, context : CallbackContext):
     file_path = "photos/" + str(id) + ".jpg"
     new_file.download(Path(file_path))
 
-    update.message.reply_text("Nice photo!")
+    update.message.reply_text("Which site?")
     
     context.user_data['lift'].site = None
     context.user_data['lift'].opening = None
@@ -105,23 +111,26 @@ def reply_photo(update : Update, context : CallbackContext):
 
     context.user_data['conv_state'] = ConversationState.SITE
 
+    return ConversationState.SITE
+
 
 def reply_site(update : Update, context : CallbackContext):
     context.user_data['lift'].site = update.message.text
 
     context.user_data['site_set'] = True
 
-    update.message.reply_text("Nice site!")
+    update.message.reply_text("Which opening?")
 
     context.user_data['conv_state'] = ConversationState.OPENING
 
-    #if (ready(context) == True):
-    #    update.message.reply_text(combine(context))
+    return ConversationState.OPENING
 
 def reply_opening(update : Update, context : CallbackContext):
     context.user_data['lift'].opening = update.message.text
     context.user_data['opening_set'] = True
 
-    update.message.reply_text("Nice opening!")
+    update.message.reply_text("Type message:")
 
-    context.user_data['conv_state'] = ConversationState.MESSAGE
+    context.user_data['conv_state'] = ConversationState.NOTE
+
+    return ConversationState.NOTE

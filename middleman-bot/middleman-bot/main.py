@@ -14,12 +14,15 @@
 """ - Lift folders for data and photos """
 """ - Conversation state shortcuts and notes (E) """
 """ - Callback keyboards """
+""" - Multiple photos and scroll buttons """
 """ - User choice feedback """
 """ - User creation and setup (E) """
 """ - Return lift """
 
 """ _________ || Update || _________ """
 """ - Photo folder location change """
+""" - File for helper functions """
+""" - Non case sensitive keywords """
 
 """ _________ || Code fix || _________ """
 """ - COMMENTS """
@@ -38,9 +41,10 @@
 """     -> Add something that initializes user_data """
 
 """ _________ || Future || _________ """
-""" - Software for computers (E) """
+""" - Software (E) """
 """ - Shipments, Lifts, Returns """
 """ - Templates (Requests) """
+""" - Profiles """
 
 
 
@@ -50,8 +54,9 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseF
 from pathlib import Path
 
 from lift import Lift, LiftState, load_lifts, add_lift
-from message_handlers import reply_test, reply_text, reply_photo, reply_site, reply_opening, reply_lift, combine
+from message_handlers import reply_test, reply_text, reply_photo, reply_site, reply_opening, reply_lift, reply_note, combine
 from message_handlers import ConversationState
+from callback_query_handlers import button
 
 from enums import BCD
 
@@ -70,65 +75,11 @@ wb = openpyxl.load_workbook('file.xlsx')
 group_chat_id = "-415596535"
 
 
-
-
-
-
-
 def test_print(update : Update, context : CallbackContext):
     print("Test Print:")
     print("message id: ", update.message.message_id)
     print("chat id: ", update.message.chat.id)
     print(context.user_data['conv_state'])
-
-def button(update : Update, context : CallbackContext):
-    query = update.callback_query
-
-# CallbackQueries need to be answered, even if no notification to the user is needed
-# Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
-    query.answer()
-
-    if (query.data == BCD.REPLY_SEND_LIFT.name):
-        add_lift(Lift(context.user_data['lift'].id,
-            context.user_data['lift'].photo, 
-            LiftState.NONE, 
-            context.user_data['lift'].site, 
-            context.user_data['lift'].opening,
-            context.user_data['lift']).note)
-
-        context.bot.send_photo(-415596535, context.user_data['lift'].photo, combine(context))
-
-        context.user_data['lift'].clear()
-        
-        context.user_data['conv_state'] = ConversationState.PHOTO
-
-        query.edit_message_text(text="Send to group")
-
-
-    elif(query.data == BCD.REPLY_CANCEL_LIFT.name):
-        context.user_data['lift'].clear()
-
-        context.user_data['conv_state'] = ConversationState.PHOTO
-
-        query.edit_message_text(text="Cancelled")
-    
-    elif(query.data == BCD.REPLY_LIFT_UPDATE_STATE.name):
-
-        keyboard = [[InlineKeyboardButton("Shore", callback_data = BCD.LIFT_STATE_SHORE.name),
-                    InlineKeyboardButton("Opening", callback_data = BCD.LIFT_STATE_OPENING.name),
-                    InlineKeyboardButton("Site", callback_data = BCD.LIFT_STATE_SITE.name),
-                    InlineKeyboardButton("Missing", callback_data = BCD.LIFT_STATE_MISSING.name),
-                    InlineKeyboardButton("Ready", callback_data = BCD.LIFT_STATE_READY.name)]]
-
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        query.edit_message_reply_markup(reply_markup=reply_markup)
-    
-    #query.edit_message_text(text="Selected option: {}".format(query.data))
-
-
-
-
-   
 
 
 def main():
@@ -188,20 +139,23 @@ def main():
     dp.bot_data['last_id'] = last_id
 
 
-    #conv_handler = ConversationHandler(
-    #    entry_points = [MessageHandler(Filters.text("Conv"))],
-    #    states = )
+    conv_handler = ConversationHandler(
+        entry_points = [MessageHandler(Filters.photo, reply_photo)],
+        states = {
+            ConversationState.SITE: [MessageHandler(Filters.text(sites), reply_site)],
+            ConversationState.OPENING: [MessageHandler(Filters.text(openings), reply_opening)],
+            ConversationState.NOTE: [MessageHandler(Filters.text, reply_note)],
+            ConversationState.PREVIEW: [CallbackQueryHandler(button)]
+            },
 
-    #dp.add_handler(MessageHandler(Filters.text("Test"), reply_test))
+        fallbacks = [MessageHandler(Filters.text, reply_text)]
+        )
+
+
+
+    dp.add_handler(conv_handler)
     dp.add_handler(MessageHandler(Filters.regex(r'ST'), reply_lift))
-
-    dp.add_handler(MessageHandler(Filters.photo, reply_photo))
-    dp.add_handler(MessageHandler(Filters.text(sites), reply_site))
-    dp.add_handler(MessageHandler(Filters.text(openings), reply_opening))
-
     dp.add_handler(MessageHandler(Filters.text, reply_text))
-
-    dp.add_handler(CallbackQueryHandler(button))
 
 
     # Start the Bot
@@ -211,6 +165,8 @@ def main():
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
+
+    print("TEST")
 
 
 
