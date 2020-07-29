@@ -1,11 +1,11 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CallbackContext, CallbackQueryHandler, CallbackContext, ConversationHandler
 from enums import BCD
-from lift import Lift, LiftState, add_lift
+from lift import Lift, LiftState, add_lift, modify_lift_state
 from message_handlers import ConversationState, combine
 
 
-def button(update : Update, context : CallbackContext):
+def preview_button(update : Update, context : CallbackContext):
     query = update.callback_query
 
 # CallbackQueries need to be answered, even if no notification to the user is needed
@@ -34,17 +34,73 @@ def button(update : Update, context : CallbackContext):
 
         context.user_data['conv_state'] = ConversationState.PHOTO
 
-        query.edit_message_text(text="Cancelled")
-    
-    elif(query.data == BCD.REPLY_LIFT_UPDATE_STATE.name):
+        query.edit_message_text(text="Canceled")
 
-        keyboard = [[InlineKeyboardButton("Shore", callback_data = BCD.LIFT_STATE_SHORE.name),
-                    InlineKeyboardButton("Opening", callback_data = BCD.LIFT_STATE_OPENING.name),
-                    InlineKeyboardButton("Site", callback_data = BCD.LIFT_STATE_SITE.name),
-                    InlineKeyboardButton("Missing", callback_data = BCD.LIFT_STATE_MISSING.name),
-                    InlineKeyboardButton("Other", callback_data = BCD.LIFT_STATE_READY.name)]]
+
+    return ConversationHandler.END
+    
+ 
+
+def state_edit_button(update : Update, context : CallbackContext):
+    query = update.callback_query
+    query.answer()
+
+    if(query.data == BCD.REPLY_LIFT_UPDATE_STATE.name):
+
+        keyboard = [[InlineKeyboardButton("Missing", callback_data = BCD.LIFT_STATE_MISSING.name),
+                    InlineKeyboardButton("Other", callback_data = BCD.LIFT_STATE_READY.name)],
+
+                    [InlineKeyboardButton("Warehouse", callback_data = BCD.LIFT_STATE_WAREHOUSE.name)],
+                    [InlineKeyboardButton("Shore", callback_data = BCD.LIFT_STATE_SHORE.name)],
+                    [InlineKeyboardButton("Opening", callback_data = BCD.LIFT_STATE_OPENING.name)],
+                    [InlineKeyboardButton("Site", callback_data = BCD.LIFT_STATE_SITE.name)]]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
         query.edit_message_reply_markup(reply_markup=reply_markup)
-    
-    #query.edit_message_text(text="Selected option: {}".format(query.data))
+
+    if(query.data == BCD.LIFT_STATE_WAREHOUSE.name):
+        st = context.user_data['st']
+
+        modify_lift_state(LiftState.WAREHOUSE, st)
+        print("Editet shipment: " + st)
+
+        context.bot.send_message(-415596535, "Shipment " + st + ": State update: " + LiftState.WAREHOUSE.name)
+        query.edit_message_text(text="Edited state")
+
+        return ConversationHandler.END
+
+    if(query.data == BCD.LIFT_STATE_SHORE.name):
+        st = context.user_data['st']
+
+        modify_lift_state(LiftState.SHORE, st)
+        print("Editet shipment: " + st)
+
+        context.bot.send_message(-415596535, "Shipment " + st + ": State update: " + LiftState.SHORE.name)
+        query.edit_message_text(text="Edited state")
+
+        return ConversationHandler.END
+
+    if(query.data == BCD.LIFT_STATE_OPENING.name):
+        st = context.user_data['st']
+
+        modify_lift_state(LiftState.OPENING, st)
+        print("Editet shipment: " + st)
+
+        context.bot.send_message(-415596535, "Shipment " + st + ": State update: " + LiftState.OPENING.name)
+        query.edit_message_text(text="Edited state")
+
+        return ConversationHandler.END
+
+    if(query.data == BCD.LIFT_STATE_SITE.name):
+        st = context.user_data['st']
+
+        modify_lift_state(LiftState.SITE, st)
+        print("Editet shipment: " + st)
+
+        context.bot.send_message(-415596535, "Shipment " + st + ": State update: " + LiftState.SITE.name)
+        query.edit_message_text(text="Edited state")
+
+        return ConversationHandler.END
+
+    return ConversationState.EDIT_SHIPMENT
+

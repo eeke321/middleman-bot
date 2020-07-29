@@ -3,6 +3,7 @@ from enum import Enum, IntEnum, Flag, auto
 # ButtonCallbackData
 class BCD(Flag):
     LIFT_STATE_NONE = auto()
+    LIFT_STATE_WAREHOUSE = auto()
     LIFT_STATE_SHORE = auto()
     LIFT_STATE_OPENING = auto()
     LIFT_STATE_SITE = auto()

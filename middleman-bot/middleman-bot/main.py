@@ -6,10 +6,10 @@
 """ TODO """
 
 """ _________ || Main || _________ """
-""" - Lift state updating (E) """
+""" - Add per user signaling and linking """
+""" - Photo folder location change """
 
 """ _________ || Add || _________ """
-""" - Add per user signaling and linking (E) """
 """ - Recognize nicnames for sites & openings """
 """ - Lift folders for data and photos """
 """ - Conversation state shortcuts and notes (E) """
@@ -20,7 +20,6 @@
 """ - Return lift """
 
 """ _________ || Update || _________ """
-""" - Photo folder location change """
 """ - File for helper functions """
 """ - Non case sensitive keywords """
 
@@ -54,9 +53,9 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseF
 from pathlib import Path
 
 from lift import Lift, LiftState, load_lifts, add_lift
-from message_handlers import reply_test, reply_text, reply_photo, reply_site, reply_opening, reply_lift, reply_note, combine
+from message_handlers import reply_test, reply_text_default, reply_photo, reply_site, reply_opening, reply_lift, reply_note, combine
 from message_handlers import ConversationState
-from callback_query_handlers import button
+from callback_query_handlers import preview_button, state_edit_button
 
 from enums import BCD
 
@@ -85,9 +84,7 @@ def test_print(update : Update, context : CallbackContext):
 def main():
     
     """Start the bot."""
-    # Create the Updater and pass it your bot's token.
-    # Make sure to set use_context=True to use the new context based callbacks
-    # Post version 12 this will no longer be necessary
+
     updater = Updater("1182411075:AAGsO0gh6609YJTeGa09CBRAZePXm6m5Ivo", use_context=True)
 
     # Get the dispatcher to register handlers
@@ -98,7 +95,6 @@ def main():
     load_lifts(lift_list)
 
     test_lift = Lift(0, 'https://telegram.org/img/t_logo.png', LiftState.NONE, "S", "O", "Note")
-    #add_lift(test_lift)
 
 
     print(wb.sheetnames)
@@ -139,31 +135,33 @@ def main():
     dp.bot_data['last_id'] = last_id
 
 
-    conv_handler = ConversationHandler(
+    new_lift_conversation = ConversationHandler(
         entry_points = [MessageHandler(Filters.photo, reply_photo)],
         states = {
             ConversationState.SITE: [MessageHandler(Filters.text(sites), reply_site)],
             ConversationState.OPENING: [MessageHandler(Filters.text(openings), reply_opening)],
             ConversationState.NOTE: [MessageHandler(Filters.text, reply_note)],
-            ConversationState.PREVIEW: [CallbackQueryHandler(button)]
-            },
+            ConversationState.PREVIEW: [CallbackQueryHandler(preview_button)]},
 
-        fallbacks = [MessageHandler(Filters.text, reply_text)]
+        fallbacks = [MessageHandler(Filters.text, reply_text_default)]
         )
 
+    edit_shipment_conversation = ConversationHandler(
+        entry_points = [MessageHandler(Filters.regex(r'ST'), reply_lift)],
+        states = {ConversationState.EDIT_SHIPMENT: [CallbackQueryHandler(state_edit_button)]},
+        fallbacks = [MessageHandler(Filters.text, reply_text_default)])
 
 
-    dp.add_handler(conv_handler)
-    dp.add_handler(MessageHandler(Filters.regex(r'ST'), reply_lift))
-    dp.add_handler(MessageHandler(Filters.text, reply_text))
+
+    dp.add_handler(new_lift_conversation)
+    dp.add_handler(edit_shipment_conversation)
+
+    dp.add_handler(MessageHandler(Filters.text, reply_text_default))
 
 
     # Start the Bot
     updater.start_polling()
 
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
     print("TEST")

@@ -4,7 +4,8 @@ from typing import List
 from telegram import PhotoSize
 
 class LiftState(Enum):
-    NONE = 0
+    NONE = -1
+    WAREHOUSE = 0
     SHORE = 1
     OPENING = 2
     SITE = 3
@@ -85,6 +86,16 @@ def modify_lift(lift : Lift, id):
     wb.save('lifts.xlsx')
 
     print("Lift modified!")
+
+def modify_lift_state(state : LiftState, id):
+    wb = openpyxl.load_workbook('lifts.xlsx')
+    lifts_sheet = wb['lifts']
+
+    r = int(id) + 3
+
+    lifts_sheet.cell(row = r, column = 2).value = state.name
+
+    wb.save('lifts.xlsx')
 
 
 

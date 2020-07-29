@@ -15,6 +15,9 @@ class ConversationState(Enum):
     NOTE = 4
     PREVIEW = 5
 
+    EDIT_SHIPMENT = 6
+    EDIT_SHIPMENT_STATE = 7
+
 def ready(context : CallbackContext):
     if (context.user_data['lift'].photo != None and
         context.user_data['conv_state'] == ConversationState.PREVIEW):
@@ -39,6 +42,11 @@ def reply_lift(update : Update, context : CallbackContext):
         photo = 'https://telegram.org/img/t_logo.png'
         update.message.reply_photo(photo)
 
+        l = len(update.message.text)
+        st = update.message.text[2:l]
+
+        context.user_data['st'] = st
+
         keyboard = [[InlineKeyboardButton("Update State", callback_data = BCD.REPLY_LIFT_UPDATE_STATE.name),
                     InlineKeyboardButton("Delete", callback_data = BCD.REPLY_LIFT_DELETE.name),
                     InlineKeyboardButton("Link", callback_data = BCD.REPLT_LIFT_LINK.name)]]
@@ -46,7 +54,7 @@ def reply_lift(update : Update, context : CallbackContext):
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text("Modify Lift: " + update.message.text, reply_markup=reply_markup)
 
-        return ConversationState.NONE
+        return ConversationState.EDIT_SHIPMENT
 
 def reply_test(update : Update, context : CallbackContext):
     update.message.reply_text("Test!")
@@ -74,8 +82,11 @@ def reply_note(update : Update, context : CallbackContext):
     return ConversationState.PREVIEW
 
 
-def reply_text(update : Update, context : CallbackContext):
+def reply_text_default(update : Update, context : CallbackContext):
         update.message.reply_text("?")
+
+
+
 
         return ConversationState.NONE
 
@@ -129,7 +140,7 @@ def reply_opening(update : Update, context : CallbackContext):
     context.user_data['lift'].opening = update.message.text
     context.user_data['opening_set'] = True
 
-    update.message.reply_text("Type message:")
+    update.message.reply_text("Type note:")
 
     context.user_data['conv_state'] = ConversationState.NOTE
 
