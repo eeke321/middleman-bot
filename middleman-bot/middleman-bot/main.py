@@ -36,8 +36,6 @@
 """ - Suqqest next state when updating it and highlight current one"""
 
 """ _________ || BUGS || _________ """
-""" - If conversation starts without photo, error ocurs """
-"""     -> Add something that initializes user_data """
 
 """ _________ || Future || _________ """
 """ - Software (E) """
