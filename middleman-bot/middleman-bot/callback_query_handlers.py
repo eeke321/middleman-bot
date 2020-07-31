@@ -115,7 +115,10 @@ def state_edit_button(update : Update, context : CallbackContext):
 
         caption = "Shipment " + st_id + ": State update: " + LiftState.SITE.name
 
-        context.bot.send_photo(chat_id = -415596535, photo = photo, caption = caption)
+        #context.bot.send_photo(chat_id = -415596535, photo = photo, caption = caption)
+
+        context.bot.send_photo(chat_id = 1156192071, photo = photo, caption = caption)
+
         query.edit_message_text(text="Edited state")
 
         return ConversationHandler.END

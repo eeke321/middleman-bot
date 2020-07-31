@@ -75,7 +75,6 @@ def test_print(update : Update, context : CallbackContext):
     print("Test Print:")
     print("message id: ", update.message.message_id)
     print("chat id: ", update.message.chat.id)
-    print(context.user_data['conv_state'])
 
 
 def main():
@@ -98,6 +97,7 @@ def main():
 
     site_code_sheet = wb['sites']
     opening_code_sheet = wb['openings']
+    user_sheet = wb['users']
 
     i = 0
     sites = []
@@ -121,10 +121,23 @@ def main():
             sites.append(site_code)
         if (opening_code != None):
             openings.append(opening_code)
+    
+    i = 1
+    users = {}
+    while True:
+        i += 1
 
+        user_id = user_sheet.cell(row = i, column = 1).value
+        user_name = user_sheet.cell(row = i, column = 2).value
+
+        if (user_id == None):
+            break
+
+        users[user_name] = user_id
 
     print(sites)
     print(openings)
+    print(users)
 
     #TEMP
     last_id = lift_list[-1].id

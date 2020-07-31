@@ -39,11 +39,15 @@ def combine(context : CallbackContext):
     return combine
 
 def reply_lift(update : Update, context : CallbackContext):
-        photo = 'https://telegram.org/img/t_logo.png'
-        update.message.reply_photo(photo)
-
         l = len(update.message.text)
         st_id = update.message.text[2:l]
+
+        file_path = "A:\photos/" + str(st_id) + ".jpg"
+        photo = open(Path(file_path), 'rb')
+
+        update.message.reply_photo(photo)
+
+
 
         context.user_data['st'] = st_id
 
@@ -87,7 +91,9 @@ def reply_note(update : Update, context : CallbackContext):
 def reply_text_default(update : Update, context : CallbackContext):
         update.message.reply_text("?")
 
-
+        print("Test Print:")
+        print("message id: ", update.message.message_id)
+        print("chat id: ", update.message.chat.id)
 
 
         return ConversationState.NONE
