@@ -6,8 +6,8 @@
 """ TODO """
 
 """ _________ || Main || _________ """
+""" - Add lift photo to state update """
 """ - Add per user signaling and linking """
-""" - Photo folder location change """
 
 """ _________ || Add || _________ """
 """ - Recognize nicnames for sites & openings """

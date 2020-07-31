@@ -63,7 +63,6 @@ def reply_test(update : Update, context : CallbackContext):
     update.message.reply_photo(photo)
 
 def reply_note(update : Update, context : CallbackContext):
-    update.message.reply_text("Nice note!")
 
     context.user_data['lift'].note = update.message.text
     context.user_data['conv_state'] = ConversationState.PREVIEW
@@ -110,7 +109,7 @@ def reply_photo(update : Update, context : CallbackContext):
 
     new_file = context.bot.getFile(file_id)
 
-    file_path = "photos/" + str(id) + ".jpg"
+    file_path = "A:\photos/" + str(id) + ".jpg"
     new_file.download(Path(file_path))
 
     update.message.reply_text("Which site?")
@@ -123,7 +122,6 @@ def reply_photo(update : Update, context : CallbackContext):
     context.user_data['conv_state'] = ConversationState.SITE
 
     return ConversationState.SITE
-
 
 def reply_site(update : Update, context : CallbackContext):
     context.user_data['lift'].site = update.message.text
