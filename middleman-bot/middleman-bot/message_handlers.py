@@ -43,15 +43,18 @@ def reply_lift(update : Update, context : CallbackContext):
         update.message.reply_photo(photo)
 
         l = len(update.message.text)
-        st = update.message.text[2:l]
+        st_id = update.message.text[2:l]
 
-        context.user_data['st'] = st
+        context.user_data['st'] = st_id
+
+
 
         keyboard = [[InlineKeyboardButton("Update State", callback_data = BCD.REPLY_LIFT_UPDATE_STATE.name),
                     InlineKeyboardButton("Delete", callback_data = BCD.REPLY_LIFT_DELETE.name),
                     InlineKeyboardButton("Link", callback_data = BCD.REPLT_LIFT_LINK.name)]]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
+
         update.message.reply_text("Modify Lift: " + update.message.text, reply_markup=reply_markup)
 
         return ConversationState.EDIT_SHIPMENT

@@ -6,7 +6,6 @@
 """ TODO """
 
 """ _________ || Main || _________ """
-""" - Add lift photo to state update """
 """ - Add per user signaling and linking """
 
 """ _________ || Add || _________ """

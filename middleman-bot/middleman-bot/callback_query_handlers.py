@@ -1,5 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CallbackContext, CallbackQueryHandler, CallbackContext, ConversationHandler
+from pathlib import Path
+
 from enums import BCD
 from lift import Lift, LiftState, add_lift, modify_lift_state
 from message_handlers import ConversationState, combine
@@ -59,45 +61,61 @@ def state_edit_button(update : Update, context : CallbackContext):
         query.edit_message_reply_markup(reply_markup=reply_markup)
 
     if(query.data == BCD.LIFT_STATE_WAREHOUSE.name):
-        st = context.user_data['st']
+        st_id = context.user_data['st']
 
-        modify_lift_state(LiftState.WAREHOUSE, st)
-        print("Editet shipment: " + st)
+        modify_lift_state(LiftState.WAREHOUSE, st_id)
 
-        context.bot.send_message(-415596535, "Shipment " + st + ": State update: " + LiftState.WAREHOUSE.name)
+        file_path = "A:\photos/" + str(st_id) + ".jpg"
+        photo = open(Path(file_path), 'rb')
+
+        caption = "Shipment " + st_id + ": State update: " + LiftState.WAREHOUSE.name
+
+        context.bot.send_photo(chat_id = -415596535, photo = photo, caption = caption)
         query.edit_message_text(text="Edited state")
 
         return ConversationHandler.END
 
     if(query.data == BCD.LIFT_STATE_SHORE.name):
-        st = context.user_data['st']
+        st_id = context.user_data['st']
 
-        modify_lift_state(LiftState.SHORE, st)
-        print("Editet shipment: " + st)
+        modify_lift_state(LiftState.SHORE, st_id)
 
-        context.bot.send_message(-415596535, "Shipment " + st + ": State update: " + LiftState.SHORE.name)
+        file_path = "A:\photos/" + str(st_id) + ".jpg"
+        photo = open(Path(file_path), 'rb')
+
+        caption = "Shipment " + st_id + ": State update: " + LiftState.SHORE.name
+
+        context.bot.send_photo(chat_id = -415596535, photo = photo, caption = caption)
         query.edit_message_text(text="Edited state")
 
         return ConversationHandler.END
 
     if(query.data == BCD.LIFT_STATE_OPENING.name):
-        st = context.user_data['st']
+        st_id = context.user_data['st']
 
-        modify_lift_state(LiftState.OPENING, st)
-        print("Editet shipment: " + st)
+        modify_lift_state(LiftState.OPENING, st_id)
 
-        context.bot.send_message(-415596535, "Shipment " + st + ": State update: " + LiftState.OPENING.name)
+        file_path = "A:\photos/" + str(st_id) + ".jpg"
+        photo = open(Path(file_path), 'rb')
+
+        caption = "Shipment " + st_id + ": State update: " + LiftState.OPENING.name
+
+        context.bot.send_photo(chat_id = -415596535, photo = photo, caption = caption)
         query.edit_message_text(text="Edited state")
 
         return ConversationHandler.END
 
     if(query.data == BCD.LIFT_STATE_SITE.name):
-        st = context.user_data['st']
+        st_id = context.user_data['st']
 
-        modify_lift_state(LiftState.SITE, st)
-        print("Editet shipment: " + st)
+        modify_lift_state(LiftState.SITE, st_id)
 
-        context.bot.send_message(-415596535, "Shipment " + st + ": State update: " + LiftState.SITE.name)
+        file_path = "A:\photos/" + str(st_id) + ".jpg"
+        photo = open(Path(file_path), 'rb')
+
+        caption = "Shipment " + st_id + ": State update: " + LiftState.SITE.name
+
+        context.bot.send_photo(chat_id = -415596535, photo = photo, caption = caption)
         query.edit_message_text(text="Edited state")
 
         return ConversationHandler.END
