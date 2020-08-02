@@ -14,13 +14,15 @@ class LiftState(Enum):
 
 
 class Lift:
-    def __init__(self, id, photo, state, site, opening, note):
+    def __init__(self, id = -1, photo = None, state = LiftState.NONE,
+                site = None, opening = None, note = None, users = None):
         self.id = id
         self.photo = photo
         self.state = state
         self.site = site
         self.opening = opening
         self.note = note
+        self.users = users
 
     def clear(self):
         self.id = None
@@ -29,6 +31,7 @@ class Lift:
         self.site = None
         self.opening = None
         self.note = None
+        self.users = None
 
 import openpyxl
 
@@ -54,8 +57,9 @@ def load_lifts(lift_list : List):
         site = lifts_sheet.cell(row = i, column = 3).value
         opening = lifts_sheet.cell(row = i, column = 4).value
         note = lifts_sheet.cell(row = i, column = 5).value
+        users = lifts_sheet.cell(row = i, column = 6).value
 
-        lift_list.append(Lift(id, photo, state, site, opening, note))
+        lift_list.append(Lift(id, photo, state, site, opening, note, users))
 
 def add_lift(lift : Lift):
     wb = openpyxl.load_workbook('lifts.xlsx')
@@ -73,7 +77,7 @@ def add_lift(lift : Lift):
 
     print("Lift added!")
 
-def modify_lift(lift : Lift, id):
+def modify_lift(lift : Lift):
     wb = openpyxl.load_workbook('lifts.xlsx')
     lifts_sheet = wb['lifts']
 

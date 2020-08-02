@@ -15,4 +15,18 @@ class BCD(Flag):
 
     REPLY_LIFT_UPDATE_STATE = auto()
     REPLY_LIFT_DELETE = auto()
-    REPLT_LIFT_LINK = auto()
+    REPLT_LIFT_ADD_LINKS = auto()
+
+    REPLY_USER_MORE = auto()
+    REPLY_USER_END_LINK = auto()
+
+# USER_DATA
+class UD(Flag):
+    NEW_LIFT = auto()
+    SHIPMENT_ID = auto()
+
+# BOT_DATA
+class BD(Flag):
+    LIFT_LIST = auto()
+    LAST_ID = auto()
+

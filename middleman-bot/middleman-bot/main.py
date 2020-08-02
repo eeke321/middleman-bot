@@ -9,10 +9,12 @@
 """ - Add per user signaling and linking """
 
 """ _________ || Add || _________ """
+""" - Send contact after messages """
 """ - Recognize nicnames for sites & openings """
 """ - Lift folders for data and photos """
 """ - Conversation state shortcuts and notes (E) """
 """ - Callback keyboards """
+""" - User can follow sites """
 """ - Multiple photos and scroll buttons """
 """ - User choice feedback """
 """ - User creation and setup (E) """
@@ -21,6 +23,8 @@
 """ _________ || Update || _________ """
 """ - File for helper functions """
 """ - Non case sensitive keywords """
+""" - Better folder path init """
+""" - New lift save system """
 
 """ _________ || Code fix || _________ """
 """ - COMMENTS """
@@ -50,11 +54,11 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseF
 from pathlib import Path
 
 from lift import Lift, LiftState, load_lifts, add_lift
-from message_handlers import reply_test, reply_text_default, reply_photo, reply_site, reply_opening, reply_lift, reply_note, combine
+from message_handlers import reply_test, reply_text_default, reply_photo, reply_site, reply_opening, reply_lift, reply_note, reply_user, combine
 from message_handlers import ConversationState
 from callback_query_handlers import preview_button, state_edit_button
 
-from enums import BCD
+from enums import BCD, UD, BD
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -90,8 +94,7 @@ def main():
     lift_list = []
     load_lifts(lift_list)
 
-    test_lift = Lift(0, 'https://telegram.org/img/t_logo.png', LiftState.NONE, "S", "O", "Note")
-
+    dp.bot_data[BD.LIFT_LIST] = lift_list
 
     print(wb.sheetnames)
 
@@ -142,7 +145,7 @@ def main():
     #TEMP
     last_id = lift_list[-1].id
 
-    dp.bot_data['last_id'] = last_id
+    dp.bot_data[BD.LAST_ID] = last_id
 
 
     new_lift_conversation = ConversationHandler(
@@ -151,14 +154,17 @@ def main():
             ConversationState.SITE: [MessageHandler(Filters.text(sites), reply_site)],
             ConversationState.OPENING: [MessageHandler(Filters.text(openings), reply_opening)],
             ConversationState.NOTE: [MessageHandler(Filters.text, reply_note)],
-            ConversationState.PREVIEW: [CallbackQueryHandler(preview_button)]},
-
+            ConversationState.PREVIEW: [CallbackQueryHandler(preview_button)]
+            },
         fallbacks = [MessageHandler(Filters.text, reply_text_default)]
         )
 
     edit_shipment_conversation = ConversationHandler(
         entry_points = [MessageHandler(Filters.regex(r'ST'), reply_lift)],
-        states = {ConversationState.EDIT_SHIPMENT: [CallbackQueryHandler(state_edit_button)]},
+        states = {
+            ConversationState.EDIT_SHIPMENT: [CallbackQueryHandler(state_edit_button)],
+            ConversationState.EDIT_SHIPMENT_LINK: [MessageHandler(Filters.text(users.keys()), reply_user)]
+            },
         fallbacks = [MessageHandler(Filters.text, reply_text_default)])
 
 
