@@ -2,9 +2,10 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext, CallbackContext, ConversationHandler
 from pathlib import Path
 
-from enums import BCD, UD
-from lift import Lift, LiftState, add_lift, modify_lift_state
+from enums import BCD, UD, BD
+from lift import Lift, LiftState, add_lift, modify_lift_state, modify_lift_users
 from message_handlers import ConversationState, combine
+import copy
 
 
 def preview_button(update : Update, context : CallbackContext):
@@ -14,15 +15,21 @@ def preview_button(update : Update, context : CallbackContext):
 # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     query.answer()
 
-    if (query.data == BCD.REPLY_SEND_LIFT.name):
-        add_lift(Lift(context.user_data[UD.NEW_LIFT].id,
+    new_lift = Lift(context.user_data[UD.NEW_LIFT].id,
             context.user_data[UD.NEW_LIFT].photo, 
             LiftState.NONE, 
             context.user_data[UD.NEW_LIFT].site, 
             context.user_data[UD.NEW_LIFT].opening,
-            context.user_data[UD.NEW_LIFT]).note)
+            context.user_data[UD.NEW_LIFT]).note
+
+    if (query.data == BCD.REPLY_SEND_LIFT.name):
+        add_lift(new_lift)
+
+        context.bot_data[BD.LIFT_LIST].append(new_lift)
 
         context.bot.send_photo(-415596535, context.user_data[UD.NEW_LIFT].photo, combine(context))
+
+        context.bot_data[BD.LIFT_LIST].append(new_lift)
 
         context.user_data[UD.NEW_LIFT].clear()
 
@@ -131,9 +138,14 @@ def state_edit_button(update : Update, context : CallbackContext):
         file_path = "A:\photos/" + str(st_id) + ".jpg"
         photo = open(Path(file_path), 'rb')
 
-        caption = "Shipment " + str(st_id) + ": State update: " + LiftState.READY.name
 
+        caption = "Shipment " + str(st_id) + ": State update: " + LiftState.READY.name
+        
         context.bot.send_photo(chat_id = 846031989, photo = photo, caption = caption)
+
+        photo.seek(0)
+
+        context.bot.send_photo(chat_id = 1156192071, photo = photo, caption = caption)
 
         query.edit_message_text(text="Info send to linked users")
 
@@ -144,7 +156,23 @@ def state_edit_button(update : Update, context : CallbackContext):
     if(query.data == BCD.REPLT_LIFT_ADD_LINKS.name):
         query.edit_message_text("Who to link?")
 
+        item_id = context.user_data[UD.SHIPMENT_ID] + 1
+
+        lift = context.bot_data[BD.LIFT_LIST][item_id]
+        lift.users.clear()
+
         return ConversationState.EDIT_SHIPMENT_LINK
+
+    if(query.data == BCD.REPLY_USER_END_LINK.name):
+        query.edit_message_text("Linking ended")
+
+        st_id = context.user_data[UD.SHIPMENT_ID]
+        
+        users = context.bot_data[BD.LIFT_LIST][st_id + 1].users
+
+        modify_lift_users(users, st_id)
+
+        return ConversationHandler.END
 
     return ConversationHandler.END
 

@@ -15,7 +15,7 @@ class LiftState(Enum):
 
 class Lift:
     def __init__(self, id = -1, photo = None, state = LiftState.NONE,
-                site = None, opening = None, note = None, users = None):
+                site = None, opening = None, note = None, users = []):
         self.id = id
         self.photo = photo
         self.state = state
@@ -31,7 +31,7 @@ class Lift:
         self.site = None
         self.opening = None
         self.note = None
-        self.users = None
+        self.users.clear()
 
 import openpyxl
 
@@ -57,7 +57,9 @@ def load_lifts(lift_list : List):
         site = lifts_sheet.cell(row = i, column = 3).value
         opening = lifts_sheet.cell(row = i, column = 4).value
         note = lifts_sheet.cell(row = i, column = 5).value
-        users = lifts_sheet.cell(row = i, column = 6).value
+
+        string_users =  lifts_sheet.cell(row = i, column = 6).value
+        users = list(string_users.split(":"))
 
         lift_list.append(Lift(id, photo, state, site, opening, note, users))
 
@@ -101,7 +103,20 @@ def modify_lift_state(state : LiftState, id):
 
     wb.save('lifts.xlsx')
 
+def modify_lift_users(users : List, id):
+    wb = openpyxl.load_workbook('lifts.xlsx')
+    lifts_sheet = wb['lifts']
 
+    r = int(id) + 3
+
+    print("ID: " + str(r))
+    print(users)
+
+    list_str = ':'.join([str(elem) for elem in users])
+
+    lifts_sheet.cell(row = r, column = 6).value = list_str
+
+    wb.save('lifts.xlsx')
 
 def save_lifts(lift_list : List):
     wb = openpyxl.load_workbook('lifts.xlsx')

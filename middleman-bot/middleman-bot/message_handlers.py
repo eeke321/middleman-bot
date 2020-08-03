@@ -38,16 +38,20 @@ def combine(context : CallbackContext):
     return combine
 
 def reply_user(update : Update, context : CallbackContext):
-    user = update.message.text
+    new_user = update.message.text
 
-    keyboard = [[InlineKeyboardButton("More", callback_data = BCD.REPLY_USER_MORE.name),
-                    InlineKeyboardButton("End Link", callback_data = BCD.REPLY_USER_END_LINK.name)]]
+    item_id = context.user_data[UD.SHIPMENT_ID] + 1
 
+    lift = context.bot_data[BD.LIFT_LIST][item_id]
+
+    lift.users.append(new_user)
+
+    keyboard = [[InlineKeyboardButton("End Linking", callback_data = BCD.REPLY_USER_END_LINK.name)]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    update.message.reply_text("Linked user: " + user, reply_markup = reply_markup)
+    update.message.reply_text("Linked user: " + new_user, reply_markup = reply_markup)
 
-    return ConversationHandler.END
+    return ConversationState.EDIT_SHIPMENT_LINK
 
 def reply_lift(update : Update, context : CallbackContext):
         l = len(update.message.text)
@@ -102,9 +106,6 @@ def reply_text_default(update : Update, context : CallbackContext):
         print("Test Print:")
         print("message id: ", update.message.message_id)
         print("chat id: ", update.message.chat.id)
-
-
-        return ConversationState.NONE
 
 def reply_photo(update : Update, context : CallbackContext):
 

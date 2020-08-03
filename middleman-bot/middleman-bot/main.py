@@ -6,30 +6,31 @@
 """ TODO """
 
 """ _________ || Main || _________ """
-""" - Add per user signaling and linking """
+""" - User can follow sites [!] """
+""" - Send contact after messages [!] """
 
 """ _________ || Add || _________ """
-""" - Send contact after messages """
 """ - Recognize nicnames for sites & openings """
 """ - Lift folders for data and photos """
-""" - Conversation state shortcuts and notes (E) """
-""" - Callback keyboards """
-""" - User can follow sites """
-""" - Multiple photos and scroll buttons """
+""" - Conversation state shortcuts and notes """
+""" - Clear past Callback keyboards """
+""" - Multiple photos and scroll buttons (!) """
 """ - User choice feedback """
-""" - User creation and setup (E) """
+""" - User creation and setup [!] """
 """ - Return lift """
+""" - Start command for setup [!] """
 
 """ _________ || Update || _________ """
 """ - File for helper functions """
-""" - Non case sensitive keywords """
+""" - Non case sensitive keywords [!] """
 """ - Better folder path init """
 """ - New lift save system """
 
 """ _________ || Code fix || _________ """
 """ - COMMENTS """
-""" - Better var names (E) """
-""" - Better state names (E) """
+""" - Better var names """
+""" - Better state names """
+""" - Element/Item id to standard """
 
 """ _________ || Optimaze || _________ """
 """ - Workbook as argument """
@@ -70,9 +71,6 @@ print(os.getcwd())
 
 import openpyxl
 wb = openpyxl.load_workbook('file.xlsx')
-
-
-group_chat_id = "-415596535"
 
 
 def test_print(update : Update, context : CallbackContext):
@@ -163,7 +161,8 @@ def main():
         entry_points = [MessageHandler(Filters.regex(r'ST'), reply_lift)],
         states = {
             ConversationState.EDIT_SHIPMENT: [CallbackQueryHandler(state_edit_button)],
-            ConversationState.EDIT_SHIPMENT_LINK: [MessageHandler(Filters.text(users.keys()), reply_user)]
+            ConversationState.EDIT_SHIPMENT_LINK: [MessageHandler(Filters.text(users.keys()), reply_user),
+                                                   CallbackQueryHandler(state_edit_button)]
             },
         fallbacks = [MessageHandler(Filters.text, reply_text_default)])
 
