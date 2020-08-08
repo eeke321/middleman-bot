@@ -6,8 +6,9 @@
 """ TODO """
 
 """ _________ || Main || _________ """
-""" - User can follow sites [!] """
 """ - Send contact after messages [!] """
+""" - Lift preview function [!] """
+""" - Ping [!] """
 
 """ _________ || Add || _________ """
 """ - Recognize nicnames for sites & openings """
@@ -55,9 +56,10 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, BaseF
 from pathlib import Path
 
 from lift import Lift, LiftState, load_lifts, add_lift
-from message_handlers import reply_test, reply_text_default, reply_photo, reply_site, reply_opening, reply_lift, reply_note, reply_user, combine
+from follow import Follow
+from message_handlers import reply_test, reply_text_default, reply_photo, reply_site, reply_opening, reply_lift, reply_note, reply_user, follow_site, combine
 from message_handlers import ConversationState
-from callback_query_handlers import preview_button, state_edit_button
+from callback_query_handlers import preview_button, state_edit_button, follow_site_button, ping_button
 
 from enums import BCD, UD, BD
 
@@ -70,7 +72,8 @@ import os
 print(os.getcwd())
 
 import openpyxl
-wb = openpyxl.load_workbook('file.xlsx')
+workbook_file = openpyxl.load_workbook('file.xlsx')
+workbook_lifts = openpyxl.load_workbook('lifts.xlsx')
 
 
 def test_print(update : Update, context : CallbackContext):
@@ -92,13 +95,18 @@ def main():
     lift_list = []
     load_lifts(lift_list)
 
+
+
     dp.bot_data[BD.LIFT_LIST] = lift_list
 
-    print(wb.sheetnames)
+    print(workbook_file.sheetnames)
 
-    site_code_sheet = wb['sites']
-    opening_code_sheet = wb['openings']
-    user_sheet = wb['users']
+    site_code_sheet = workbook_file['sites']
+    opening_code_sheet = workbook_file['openings']
+    user_sheet = workbook_file['users']
+
+    follows_sheet = workbook_lifts['follows']
+
 
     i = 0
     sites = []
@@ -136,15 +144,52 @@ def main():
 
         users[user_name] = user_id
 
+    i = 1
+    follow = {}
+    while True:
+        i += 1
+
+        follow_name = follows_sheet.cell(row = i, column = 1).value
+
+        if (follow_name == None):
+            break
+
+        follow_users = []
+
+        j = 1
+        while True:
+            j += 1
+
+            user = follows_sheet.cell(row = i, column = j).value
+
+            if (user == None):
+                break
+
+            follow_users.append(user)
+
+        follow[follow_name] = follow_users
+
+
+    
+    dp.bot_data[BD.USER_DICT] = users
+    dp.bot_data[BD.FOLLOW_DICT] = follow
+
     print(sites)
     print(openings)
     print(users)
+    print(follow)
 
     #TEMP
     last_id = lift_list[-1].id
 
     dp.bot_data[BD.LAST_ID] = last_id
 
+    follow_site_conversation = ConversationHandler(
+        entry_points = [MessageHandler(Filters.text(sites), follow_site)],
+        states = {
+            ConversationState.FOLLOW_SITE: [CallbackQueryHandler(follow_site_button)]
+            },
+        fallbacks = [MessageHandler(Filters.text, reply_text_default)])
 
     new_lift_conversation = ConversationHandler(
         entry_points = [MessageHandler(Filters.photo, reply_photo)],
@@ -162,15 +207,18 @@ def main():
         states = {
             ConversationState.EDIT_SHIPMENT: [CallbackQueryHandler(state_edit_button)],
             ConversationState.EDIT_SHIPMENT_LINK: [MessageHandler(Filters.text(users.keys()), reply_user),
-                                                   CallbackQueryHandler(state_edit_button)]
+                                                   CallbackQueryHandler(state_edit_button)],
+            ConversationState.EDIT_SHIPMENT_PING: [CallbackQueryHandler(ping_button)]
             },
         fallbacks = [MessageHandler(Filters.text, reply_text_default)])
 
 
 
     dp.add_handler(new_lift_conversation)
+    dp.add_handler(follow_site_conversation)
     dp.add_handler(edit_shipment_conversation)
 
+    dp.add_handler(MessageHandler(Filters.text("testi"), reply_test))
     dp.add_handler(MessageHandler(Filters.text, reply_text_default))
 
 

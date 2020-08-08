@@ -14,19 +14,27 @@ class BCD(Flag):
     REPLY_CANCEL_LIFT = auto()
 
     REPLY_LIFT_UPDATE_STATE = auto()
-    REPLY_LIFT_DELETE = auto()
-    REPLT_LIFT_ADD_LINKS = auto()
+    REPLY_LIFT_FOLLOW = auto()
+    REPLY_LIFT_ADD_LINKS = auto()
+    REPLY_LIFT_PING = auto()
 
     REPLY_USER_MORE = auto()
     REPLY_USER_END_LINK = auto()
+
+    FOLLOW_SITE_YES = auto()
+    FOLLOW_SITE_NO = auto()
 
 # USER_DATA
 class UD(Flag):
     NEW_LIFT = auto()
     SHIPMENT_ID = auto()
+    FOLLOW_SITE = auto()
 
 # BOT_DATA
 class BD(Flag):
     LIFT_LIST = auto()
+    USER_DICT = auto()
+    FOLLOW_DICT = auto()
     LAST_ID = auto()
+    PING_SITE = auto()
 

@@ -59,8 +59,12 @@ def load_lifts(lift_list : List):
         note = lifts_sheet.cell(row = i, column = 5).value
 
         string_users =  lifts_sheet.cell(row = i, column = 6).value
-        users = list(string_users.split(":"))
 
+        users : list = []
+
+        if (string_users != None):
+            users = list(string_users.split(":"))
+                
         lift_list.append(Lift(id, photo, state, site, opening, note, users))
 
 def add_lift(lift : Lift):

@@ -1,11 +1,10 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InputTextMessageContent
 from telegram.ext import MessageHandler, CallbackContext, CallbackQueryHandler, CallbackContext, ConversationHandler
 from enum import Enum, IntEnum
 
 from lift import Lift, LiftState, load_lifts, add_lift
 from pathlib import Path
 from enums import BCD, UD, BD
-
 
 class ConversationState(Enum):
     NONE = 0
@@ -17,6 +16,9 @@ class ConversationState(Enum):
 
     EDIT_SHIPMENT = 6
     EDIT_SHIPMENT_LINK = 7
+    EDIT_SHIPMENT_PING = 8
+
+    FOLLOW_SITE = 9
 
 def ready(context : CallbackContext):
     if (context.user_data[UD.NEW_LIFT].photo != None):
@@ -31,11 +33,25 @@ def combine(context : CallbackContext):
     opening = "Opening: " + context.user_data[UD.NEW_LIFT].opening
     note = "# " + context.user_data[UD.NEW_LIFT].note
 
-    combine = "New Lift: ST" + str(id) + "\n" + site + "\n" + opening + '\n' + note
+    combine = "- New Lift: ST" + str(id) + " -\n" + site + "\n" + opening + '\n' + note
 
     print("COMBINED")
 
     return combine
+
+def follow_site(update : Update, context : CallbackContext):
+    print("FOLLOW")
+
+    site = update.message.text
+
+    context.user_data[UD.FOLLOW_SITE] = site
+
+    keyboard = [[InlineKeyboardButton("Follow " + u'\U0001F91D', callback_data = BCD.FOLLOW_SITE_YES.name)]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    update.message.reply_text("Site: " + site, reply_markup = reply_markup)
+
+    return ConversationState.FOLLOW_SITE
 
 def reply_user(update : Update, context : CallbackContext):
     new_user = update.message.text
@@ -67,8 +83,10 @@ def reply_lift(update : Update, context : CallbackContext):
 
 
         keyboard = [[InlineKeyboardButton("Update State", callback_data = BCD.REPLY_LIFT_UPDATE_STATE.name),
-                    InlineKeyboardButton("Delete", callback_data = BCD.REPLY_LIFT_DELETE.name),
-                    InlineKeyboardButton("Add Links", callback_data = BCD.REPLT_LIFT_ADD_LINKS.name)]]
+                    InlineKeyboardButton("Ping! " + u'\U0001F6CE', callback_data = BCD.REPLY_LIFT_PING.name),
+                    InlineKeyboardButton("Users", callback_data = BCD.REPLY_LIFT_ADD_LINKS.name)],
+                    
+                    [InlineKeyboardButton("Follow " + u'\U0001F91D', callback_data = BCD.REPLY_LIFT_FOLLOW.name)]]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -77,10 +95,17 @@ def reply_lift(update : Update, context : CallbackContext):
         return ConversationState.EDIT_SHIPMENT
 
 def reply_test(update : Update, context : CallbackContext):
-    update.message.reply_text("Test!")
+    print("Test Print:")
+    print("message id: ", update.message.message_id)
+    print("chat id: ", update.message.chat.id)
 
-    photo = context.bot_data['photo']
-    update.message.reply_photo(photo)
+    sender = update.message.from_user
+    mention = sender.mention_markdown_v2(name = "TEST")
+
+    text = InputTextMessageContent(message_text = mention, parse_mode = 'MARKDOWN_V2')
+
+    update.message.reply_text(text)
+
 
 def reply_note(update : Update, context : CallbackContext):
 
@@ -102,10 +127,10 @@ def reply_note(update : Update, context : CallbackContext):
 
 def reply_text_default(update : Update, context : CallbackContext):
         update.message.reply_text("?")
-
-        print("Test Print:")
-        print("message id: ", update.message.message_id)
-        print("chat id: ", update.message.chat.id)
+        print(update.message.text)
+        #print("Test Print:")
+        #print("message id: ", update.message.message_id)
+        #print("chat id: ", update.message.chat.id)
 
 def reply_photo(update : Update, context : CallbackContext):
 

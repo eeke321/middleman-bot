@@ -7,12 +7,19 @@ from lift import Lift, LiftState, add_lift, modify_lift_state, modify_lift_users
 from message_handlers import ConversationState, combine
 import copy
 
+def ping_button(update : Update, context : CallbackContext):
+    query = update.callback_query
+    query.answer()
+
+
+
+    return ConversationHandler.END
+
 
 def preview_button(update : Update, context : CallbackContext):
     query = update.callback_query
 
-# CallbackQueries need to be answered, even if no notification to the user is needed
-# Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
+
     query.answer()
 
     new_lift = Lift(context.user_data[UD.NEW_LIFT].id,
@@ -27,13 +34,16 @@ def preview_button(update : Update, context : CallbackContext):
 
         context.bot_data[BD.LIFT_LIST].append(new_lift)
 
-        context.bot.send_photo(-415596535, context.user_data[UD.NEW_LIFT].photo, combine(context))
+        keyboard = [[InlineKeyboardButton("Follow " + u'\U0001F91D', callback_data = BCD.FOLLOW_SITE_YES.name)]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        context.bot.send_photo(-1001123729341, context.user_data[UD.NEW_LIFT].photo, combine(context), reply_markup = reply_markup)
 
         context.bot_data[BD.LIFT_LIST].append(new_lift)
 
         context.user_data[UD.NEW_LIFT].clear()
 
-        query.edit_message_text(text="Send to group")
+        query.edit_message_text(text="Send to group " + u'\U0001F91D')
 
 
     elif(query.data == BCD.REPLY_CANCEL_LIFT.name):
@@ -58,11 +68,11 @@ def state_edit_button(update : Update, context : CallbackContext):
         keyboard = [[InlineKeyboardButton("Missing", callback_data = BCD.LIFT_STATE_MISSING.name),
                     InlineKeyboardButton("Other", callback_data = BCD.LIFT_STATE_READY.name)],
 
-                    [InlineKeyboardButton("Warehouse", callback_data = BCD.LIFT_STATE_WAREHOUSE.name)],
-                    [InlineKeyboardButton("Shore", callback_data = BCD.LIFT_STATE_SHORE.name)],
-                    [InlineKeyboardButton("Opening", callback_data = BCD.LIFT_STATE_OPENING.name)],
-                    [InlineKeyboardButton("Site", callback_data = BCD.LIFT_STATE_SITE.name)],
-                    [InlineKeyboardButton("Ready", callback_data = BCD.LIFT_STATE_READY.name)]]
+                    [InlineKeyboardButton("[ Warehouse ]", callback_data = BCD.LIFT_STATE_WAREHOUSE.name)],
+                    [InlineKeyboardButton("[ Shore ]", callback_data = BCD.LIFT_STATE_SHORE.name)],
+                    [InlineKeyboardButton("[ Opening ]", callback_data = BCD.LIFT_STATE_OPENING.name)],
+                    [InlineKeyboardButton("[ Site ]", callback_data = BCD.LIFT_STATE_SITE.name)],
+                    [InlineKeyboardButton("Ping!", callback_data = BCD.LIFT_STATE_READY.name)]]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
         query.edit_message_reply_markup(reply_markup=reply_markup)
@@ -79,7 +89,7 @@ def state_edit_button(update : Update, context : CallbackContext):
 
         caption = "Shipment " + str(st_id) + ": State update: " + LiftState.WAREHOUSE.name
 
-        context.bot.send_photo(chat_id = -415596535, photo = photo, caption = caption)
+        context.bot.send_photo(chat_id = -1001454113278, photo = photo, caption = caption)
         query.edit_message_text(text="Edited state")
 
         return ConversationHandler.END
@@ -94,7 +104,8 @@ def state_edit_button(update : Update, context : CallbackContext):
 
         caption = "Shipment " + str(st_id) + ": State update: " + LiftState.SHORE.name
 
-        context.bot.send_photo(chat_id = -415596535, photo = photo, caption = caption)
+
+        context.bot.send_photo(chat_id = -1001123729341, photo = photo, caption = caption)
         query.edit_message_text(text="Edited state")
 
         return ConversationHandler.END
@@ -109,7 +120,7 @@ def state_edit_button(update : Update, context : CallbackContext):
 
         caption = "Shipment " + str(st_id) + ": State update: " + LiftState.OPENING.name
 
-        context.bot.send_photo(chat_id = -415596535, photo = photo, caption = caption)
+        context.bot.send_photo(chat_id = -1001123729341, photo = photo, caption = caption)
         query.edit_message_text(text="Edited state")
 
         return ConversationHandler.END
@@ -124,7 +135,7 @@ def state_edit_button(update : Update, context : CallbackContext):
 
         caption = "Shipment " + str(st_id) + ": State update: " + LiftState.SITE.name
 
-        context.bot.send_photo(chat_id = -415596535, photo = photo, caption = caption)
+        context.bot.send_photo(chat_id = -1001123729341, photo = photo, caption = caption)
 
         query.edit_message_text(text="Edited state")
 
@@ -141,11 +152,18 @@ def state_edit_button(update : Update, context : CallbackContext):
 
         caption = "Shipment " + str(st_id) + ": State update: " + LiftState.READY.name
         
-        context.bot.send_photo(chat_id = 846031989, photo = photo, caption = caption)
+        for x, y in context.bot_data[BD.USER_DICT].items():
+            print("Ping! to: " + x + " : " + str(y))
 
-        photo.seek(0)
+            context.bot.send_photo(chat_id = y, photo = photo, caption = caption)
+            photo.seek(0)
 
-        context.bot.send_photo(chat_id = 1156192071, photo = photo, caption = caption)
+        #context.bot.send_photo(chat_id = 846031989, photo
+        # = photo, caption = caption)
+
+        #photo.seek(0)
+
+        #context.bot.send_photo(chat_id = 1156192071, photo = photo, caption = caption)
 
         query.edit_message_text(text="Info send to linked users")
 
@@ -153,8 +171,8 @@ def state_edit_button(update : Update, context : CallbackContext):
 
     """ Link """
 
-    if(query.data == BCD.REPLT_LIFT_ADD_LINKS.name):
-        query.edit_message_text("Who to link?")
+    if(query.data == BCD.REPLY_LIFT_ADD_LINKS.name):
+        query.edit_message_text("Add users:")
 
         item_id = context.user_data[UD.SHIPMENT_ID] + 1
 
@@ -174,5 +192,51 @@ def state_edit_button(update : Update, context : CallbackContext):
 
         return ConversationHandler.END
 
+    """ Ping """
+
+    if(query.data == BCD.REPLY_LIFT_PING.name):
+        print("Ping!")
+
+        st_id = context.user_data[UD.SHIPMENT_ID]
+
+        file_path = "A:\photos/" + str(st_id) + ".jpg"
+        photo = open(Path(file_path), 'rb')
+
+        caption = "Shipment " + str(st_id) + ": Ping!"
+
+        context.bot.send_photo(chat_id = -1001454113278, photo = photo, caption = caption)
+
+        lift_id = st_id + 1
+        site = context.bot_data[BD.LIFT_LIST][lift_id].site
+
+        context.bot_data[BD.PING_SITE] = site
+
+        query.edit_message_text(text="Ping send to site: " + site + " " + u'\U0001F6CE')
+
     return ConversationHandler.END
 
+def follow_site_button(update : Update, context : CallbackContext):
+
+    query = update.callback_query
+    query.answer()
+
+    site = context.user_data[UD.FOLLOW_SITE]
+
+    if(query.data == BCD.FOLLOW_SITE_YES.name):
+
+        user_name = None
+
+        for x, y in context.bot_data[BD.USER_DICT].items():
+            if (y == update.effective_chat.id):
+                user_name = x
+
+        print("New follow: " + user_name)
+
+        context.bot_data[BD.FOLLOW_DICT][site].append(user_name)
+
+        query.edit_message_text(text = "Following site: " + site + " " + u'\U0001F91D')
+
+    if(query.data == BCD.FOLLOW_SITE_NO.name):
+        print("N")
+
+    return ConversationHandler.END
