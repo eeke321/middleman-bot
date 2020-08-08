@@ -22,12 +22,14 @@ def preview_button(update : Update, context : CallbackContext):
 
     query.answer()
 
-    new_lift = Lift(context.user_data[UD.NEW_LIFT].id,
-            context.user_data[UD.NEW_LIFT].photo, 
-            LiftState.NONE, 
-            context.user_data[UD.NEW_LIFT].site, 
-            context.user_data[UD.NEW_LIFT].opening,
-            context.user_data[UD.NEW_LIFT]).note
+    new_lift = Lift(
+        id = context.user_data[UD.NEW_LIFT].id,
+        from_user = context.user_data[UD.NEW_LIFT].from_user,
+        photo = context.user_data[UD.NEW_LIFT].photo, 
+        state = LiftState.NONE, 
+        site = context.user_data[UD.NEW_LIFT].site, 
+        opening = context.user_data[UD.NEW_LIFT].opening,
+        note = context.user_data[UD.NEW_LIFT].note)
 
     if (query.data == BCD.REPLY_SEND_LIFT.name):
         add_lift(new_lift)

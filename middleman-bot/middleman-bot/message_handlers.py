@@ -32,8 +32,9 @@ def combine(context : CallbackContext):
     site = "Site: " + context.user_data[UD.NEW_LIFT].site
     opening = "Opening: " + context.user_data[UD.NEW_LIFT].opening
     note = "# " + context.user_data[UD.NEW_LIFT].note
+    from_user = "- " + context.user_data[UD.NEW_LIFT].from_user
 
-    combine = "- New Lift: ST" + str(id) + " -\n" + site + "\n" + opening + '\n' + note
+    combine = "- New Lift: ST" + str(id) + " -\n" + site + "\n" + opening + '\n' + note + '\n' + from_user
 
     print("COMBINED")
 
@@ -100,9 +101,9 @@ def reply_test(update : Update, context : CallbackContext):
     print("chat id: ", update.message.chat.id)
 
     sender = update.message.from_user
-    mention = sender.mention_markdown_v2(name = "TEST")
+    mention = sender.text_markdown_v2(name = "TEST")
 
-    text = InputTextMessageContent(message_text = mention, parse_mode = 'MARKDOWN_V2')
+    text = InputTextMessageContent(message_text = mention, parse_mode = 'MarkdownV2')
 
     update.message.reply_text(text)
 
@@ -143,12 +144,14 @@ def reply_photo(update : Update, context : CallbackContext):
     id = context.bot_data[BD.LAST_ID] + 1
     context.user_data[UD.NEW_LIFT].id = id
 
+    context.user_data[UD.NEW_LIFT].from_user = update.message.from_user.name
+
     photo = update.message.photo[-1]
     file_id = photo.file_id
 
-
+    
     context.user_data[UD.NEW_LIFT].photo = photo
-
+    
 
     new_file = context.bot.getFile(file_id)
 

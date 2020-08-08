@@ -14,9 +14,10 @@ class LiftState(Enum):
 
 
 class Lift:
-    def __init__(self, id = -1, photo = None, state = LiftState.NONE,
+    def __init__(self, id = -1, from_user = None, photo = None, state = LiftState.NONE,
                 site = None, opening = None, note = None, users = []):
         self.id = id
+        self.from_user = from_user
         self.photo = photo
         self.state = state
         self.site = site
@@ -26,6 +27,7 @@ class Lift:
 
     def clear(self):
         self.id = None
+        self.from_user = None
         self.photo = None
         self.state = LiftState.NONE
         self.site = None

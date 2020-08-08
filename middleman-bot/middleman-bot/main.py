@@ -6,7 +6,6 @@
 """ TODO """
 
 """ _________ || Main || _________ """
-""" - Send contact after messages [!] """
 """ - Lift preview function [!] """
 """ - Ping [!] """
 
